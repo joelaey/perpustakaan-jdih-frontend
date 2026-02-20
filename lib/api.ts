@@ -76,4 +76,46 @@ export const booksAPI = {
     getRecommendations: (id: number) => api.get(`/books/${id}/recommendations`),
 };
 
+// Users API (admin only)
+export const usersAPI = {
+    getAll: () => api.get('/users'),
+    create: (data: { name: string; email: string; password: string; role: string }) =>
+        api.post('/users', data),
+    update: (id: number, data: Record<string, unknown>) => api.put(`/users/${id}`, data),
+    delete: (id: number) => api.delete(`/users/${id}`),
+    updateProfile: (data: { name?: string; email?: string }) =>
+        api.put('/users/profile', data),
+    changePassword: (currentPassword: string, newPassword: string) =>
+        api.put('/users/change-password', { currentPassword, newPassword }),
+};
+
+// Borrowings API
+export const borrowingsAPI = {
+    request: (bookId: number, notes?: string) =>
+        api.post('/borrowings', { book_id: bookId, notes }),
+    getAll: (params?: { status?: string; page?: number; limit?: number }) => {
+        const searchParams = new URLSearchParams();
+        if (params?.status) searchParams.set('status', params.status);
+        if (params?.page) searchParams.set('page', String(params.page));
+        if (params?.limit) searchParams.set('limit', String(params.limit));
+        const qs = searchParams.toString();
+        return api.get(`/borrowings${qs ? `?${qs}` : ''}`);
+    },
+    updateStatus: (id: number, status: string, adminNotes?: string) =>
+        api.put(`/borrowings/${id}/status`, { status, admin_notes: adminNotes }),
+    cancel: (id: number) => api.delete(`/borrowings/${id}`),
+    getStats: () => api.get('/borrowings/stats'),
+};
+
+// Messages API
+export const messagesAPI = {
+    send: (receiverId: number, message: string) =>
+        api.post('/messages', { receiver_id: receiverId, message }),
+    getConversations: () => api.get('/messages/conversations'),
+    getMessages: (partnerId: number) => api.get(`/messages/${partnerId}`),
+    getUnreadCount: () => api.get('/messages/unread'),
+    getAdmins: () => api.get('/messages/admins'),
+};
+
 export default api;
+

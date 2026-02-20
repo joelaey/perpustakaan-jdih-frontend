@@ -5,51 +5,41 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/AuthGuard';
 import Navbar from '@/components/Navbar';
-import { booksAPI } from '@/lib/api';
-import { BookOpen, Users, FileText, Plus, Library, BookMarked, BarChart3 } from 'lucide-react';
+import { booksAPI, usersAPI, borrowingsAPI } from '@/lib/api';
+import { BookOpen, Users, Clock, CheckCircle, Plus, Library, BookMarked, UserCog, ClipboardList, MessageCircle, RotateCcw } from 'lucide-react';
 
 export default function AdminDashboard() {
     const { user } = useAuth();
     const [bookCount, setBookCount] = useState(0);
+    const [userCount, setUserCount] = useState(0);
+    const [borrowStats, setBorrowStats] = useState({ pending: 0, borrowed: 0, returned: 0, total: 0 });
 
     useEffect(() => {
         booksAPI.getStats()
             .then(res => setBookCount(res.data.total || 0))
             .catch(() => { });
+        usersAPI.getAll()
+            .then(res => setUserCount(res.data.data?.length || 0))
+            .catch(() => { });
+        borrowingsAPI.getStats()
+            .then(res => setBorrowStats(res.data.data || borrowStats))
+            .catch(() => { });
     }, []);
 
     const stats = [
-        { label: 'Total Buku Hukum', value: bookCount.toLocaleString(), icon: BookOpen, color: 'red' },
-        { label: 'Pengguna Terdaftar', value: '156', icon: Users, color: 'blue' },
-        { label: 'Total Dokumen', value: '324', icon: FileText, color: 'purple' },
-        { label: 'Download Bulan Ini', value: '89', icon: BarChart3, color: 'green' },
+        { label: 'Total Buku', value: bookCount.toLocaleString(), icon: BookOpen, color: 'red' },
+        { label: 'Pengguna', value: userCount.toLocaleString(), icon: Users, color: 'blue' },
+        { label: 'Menunggu Persetujuan', value: String(borrowStats.pending), icon: Clock, color: 'purple' },
+        { label: 'Sedang Dipinjam', value: String(borrowStats.borrowed), icon: BookMarked, color: 'green' },
     ];
 
     const quickActions = [
-        {
-            title: 'Kelola Buku',
-            description: 'Lihat, edit, dan hapus koleksi buku',
-            icon: Library,
-            color: 'var(--accent-bg)',
-            iconColor: 'var(--accent)',
-            href: '/admin/books',
-        },
-        {
-            title: 'Tambah Buku',
-            description: 'Tambahkan buku baru ke koleksi',
-            icon: Plus,
-            color: 'var(--accent-bg)',
-            iconColor: 'var(--accent)',
-            href: '/admin/tambah-buku',
-        },
-        {
-            title: 'Lihat Katalog',
-            description: 'Jelajahi katalog buku publik',
-            icon: BookMarked,
-            color: 'rgba(59, 130, 246, 0.08)',
-            iconColor: '#3b82f6',
-            href: '/books',
-        },
+        { title: 'Kelola Buku', description: 'Lihat, edit, dan hapus koleksi', icon: Library, color: 'var(--accent-bg)', iconColor: 'var(--accent)', href: '/admin/books' },
+        { title: 'Tambah Buku', description: 'Tambahkan buku baru', icon: Plus, color: 'var(--accent-bg)', iconColor: 'var(--accent)', href: '/admin/tambah-buku' },
+        { title: 'Peminjaman', description: 'Verifikasi & tracking peminjaman', icon: ClipboardList, color: 'rgba(139,92,246,0.08)', iconColor: '#8b5cf6', href: '/admin/peminjaman' },
+        { title: 'Kelola Users', description: 'Tambah & kelola pengguna', icon: UserCog, color: 'rgba(59,130,246,0.08)', iconColor: '#3b82f6', href: '/admin/users' },
+        { title: 'Chat', description: 'Balas pesan dari pengguna', icon: MessageCircle, color: 'rgba(34,197,94,0.08)', iconColor: '#22c55e', href: '/chat' },
+        { title: 'Lihat Katalog', description: 'Jelajahi katalog publik', icon: BookMarked, color: 'rgba(245,158,11,0.08)', iconColor: '#f59e0b', href: '/books' },
     ];
 
     return (
@@ -74,6 +64,19 @@ export default function AdminDashboard() {
                             </div>
                         ))}
                     </div>
+
+                    {/* Recent Info Bar */}
+                    {borrowStats.pending > 0 && (
+                        <Link href="/admin/peminjaman" style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '1rem 1.25rem',
+                            background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
+                            borderRadius: 14, marginBottom: 24, color: '#f59e0b', textDecoration: 'none',
+                            fontSize: '0.9rem', fontWeight: 500, transition: 'all 0.2s',
+                        }}>
+                            <Clock size={18} />
+                            {borrowStats.pending} permintaan peminjaman menunggu persetujuan
+                        </Link>
+                    )}
 
                     {/* Section Divider */}
                     <div style={{ marginBottom: 32 }}>

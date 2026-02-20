@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Sun, Moon, Monitor, Menu, X, User as UserIcon, LogOut } from 'lucide-react';
+import { Sun, Moon, Monitor, Menu, X, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
     const { isAuthenticated, isAdmin, user, logout } = useAuth();
@@ -14,6 +14,8 @@ export default function Navbar() {
     const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handler = () => setScrolled(window.scrollY > 10);
@@ -23,7 +25,19 @@ export default function Navbar() {
 
     useEffect(() => {
         setMobileOpen(false);
+        setProfileOpen(false);
     }, [pathname]);
+
+    // Close profile dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+                setProfileOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const themeButtons = [
         { value: 'light' as const, icon: Sun },
@@ -31,11 +45,28 @@ export default function Navbar() {
         { value: 'system' as const, icon: Monitor },
     ];
 
-    const leftLinks = [
-        { href: '/', label: 'Home' },
-        { href: '/books', label: 'Buku' },
-        { href: '/tentang', label: 'Tentang' },
-    ];
+    // Different left links for admin vs public
+    const isAdminRoute = pathname.startsWith('/admin') || pathname === '/dashboard';
+    const leftLinks = isAuthenticated && isAdmin && isAdminRoute
+        ? [
+            { href: '/admin/dashboard', label: 'Dashboard' },
+            { href: '/admin/books', label: 'Kelola Buku' },
+            { href: '/admin/peminjaman', label: 'Peminjaman' },
+            { href: '/admin/users', label: 'Users' },
+            { href: '/chat', label: 'Chat' },
+        ]
+        : isAuthenticated
+            ? [
+                { href: '/', label: 'Home' },
+                { href: '/books', label: 'Buku' },
+                { href: '/tentang', label: 'Tentang' },
+                { href: '/chat', label: 'Chat' },
+            ]
+            : [
+                { href: '/', label: 'Home' },
+                { href: '/books', label: 'Buku' },
+                { href: '/tentang', label: 'Tentang' },
+            ];
 
     return (
         <>
@@ -80,18 +111,72 @@ export default function Navbar() {
                     </div>
 
                     {isAuthenticated ? (
-                        <>
-                            {isAdmin && (
-                                <Link href="/admin/dashboard" className={pathname.startsWith('/admin') ? 'active' : ''}>Dashboard</Link>
-                            )}
-                            <Link href={isAdmin ? '/admin/dashboard' : '/dashboard'} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <UserIcon size={14} />
-                                {user?.name?.split(' ')[0]}
-                            </Link>
-                            <button onClick={logout} className="btn btn-ghost btn-sm" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <LogOut size={14} /> Keluar
+                        <div className="profile-dropdown" ref={profileRef} style={{ position: 'relative' }}>
+                            <button
+                                onClick={() => setProfileOpen(!profileOpen)}
+                                className="profile-trigger"
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                    background: 'none', border: 'none', color: 'var(--text-secondary)',
+                                    cursor: 'pointer', font: 'inherit', fontSize: '0.9rem',
+                                    padding: '6px 10px', borderRadius: 8,
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                <UserIcon size={16} />
+                                <span>{user?.name?.split(' ')[0]}</span>
+                                <ChevronDown size={14} style={{
+                                    transform: profileOpen ? 'rotate(180deg)' : 'rotate(0)',
+                                    transition: 'transform 0.2s',
+                                }} />
                             </button>
-                        </>
+
+                            {profileOpen && (
+                                <div className="profile-menu" style={{
+                                    position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                                    background: 'var(--glass-bg)', backdropFilter: 'blur(20px)',
+                                    border: '1px solid var(--glass-border)', borderRadius: 12,
+                                    padding: '8px', minWidth: 180, zIndex: 1000,
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                                    animation: 'fadeSlideDown 0.2s ease',
+                                }}>
+                                    <div style={{
+                                        padding: '10px 12px', borderBottom: '1px solid var(--glass-border)',
+                                        marginBottom: 4,
+                                    }}>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                            {user?.name}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                            {user?.email}
+                                        </div>
+                                    </div>
+                                    <Link href="/admin/profile" style={{
+                                        display: 'flex', alignItems: 'center', gap: 8,
+                                        padding: '8px 12px', borderRadius: 8, fontSize: '0.85rem',
+                                        color: 'var(--text-secondary)', textDecoration: 'none',
+                                        transition: 'background 0.2s',
+                                    }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                    >
+                                        <UserIcon size={14} /> Profil Saya
+                                    </Link>
+                                    <button onClick={logout} style={{
+                                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                                        padding: '8px 12px', borderRadius: 8, fontSize: '0.85rem',
+                                        color: '#ef4444', background: 'none', border: 'none',
+                                        cursor: 'pointer', font: 'inherit', textAlign: 'left',
+                                        transition: 'background 0.2s',
+                                    }}
+                                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+                                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                    >
+                                        <LogOut size={14} /> Keluar
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <>
                             <Link href="/login">Masuk</Link>
@@ -120,9 +205,12 @@ export default function Navbar() {
                     </>
                 )}
                 {isAuthenticated && (
-                    <button onClick={logout} style={{ textAlign: 'left', background: 'none', border: 'none', font: 'inherit', color: 'var(--text-secondary)', padding: '10px 0', cursor: 'pointer' }}>
-                        Keluar
-                    </button>
+                    <>
+                        <Link href="/admin/profile">Profil Saya</Link>
+                        <button onClick={logout} style={{ textAlign: 'left', background: 'none', border: 'none', font: 'inherit', color: '#ef4444', padding: '10px 0', cursor: 'pointer' }}>
+                            Keluar
+                        </button>
+                    </>
                 )}
                 <div style={{ paddingTop: 12, display: 'flex', gap: 4 }}>
                     {themeButtons.map(({ value, icon: Icon }) => (
@@ -141,6 +229,13 @@ export default function Navbar() {
                     ))}
                 </div>
             </div>
+
+            <style jsx>{`
+                @keyframes fadeSlideDown {
+                    from { opacity: 0; transform: translateY(-8px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </>
     );
 }
