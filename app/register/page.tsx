@@ -1,19 +1,14 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-    Eye, EyeOff, AlertCircle, Loader2, CheckCircle2,
-    Mail, Phone, ArrowRight, Timer,
-} from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, ArrowLeft, Timer, Mail, Phone, CheckCircle } from 'lucide-react';
 
 export default function RegisterPage() {
-    const { register, isAuthenticated } = useAuth();
-    const router = useRouter();
-    const [mode, setMode] = useState<'email' | 'phone'>('email');
+    // Form fields
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
@@ -23,54 +18,55 @@ export default function RegisterPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // OTP states
-    const [otpSent, setOtpSent] = useState(false);
+    // OTP verification step
+    const [step, setStep] = useState<'form' | 'verify'>('form');
+    const [verifyMethod, setVerifyMethod] = useState<'email' | 'phone'>('email');
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [otpTimer, setOtpTimer] = useState(0);
+    const [otpSent, setOtpSent] = useState(false);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    React.useEffect(() => {
-        if (isAuthenticated) {
-            router.push('/dashboard');
-        }
-    }, [isAuthenticated, router]);
+    const { register } = useAuth();
+    const router = useRouter();
 
-    // OTP timer countdown
-    React.useEffect(() => {
-        if (otpTimer > 0) {
-            const t = setTimeout(() => setOtpTimer(otpTimer - 1), 1000);
-            return () => clearTimeout(t);
-        }
-    }, [otpTimer]);
+    // Handle form submit → go to OTP step
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        if (!name.trim()) { setError('Nama lengkap harus diisi'); return; }
+        if (!email.trim()) { setError('Email harus diisi'); return; }
+        if (!phone.trim() || phone.length < 10) { setError('Nomor telepon harus valid (min. 10 digit)'); return; }
+        if (password.length < 6) { setError('Password minimal 6 karakter'); return; }
+        if (password !== confirmPassword) { setError('Konfirmasi password tidak sama'); return; }
 
-    const passwordRequirements = [
-        { label: 'Minimal 6 karakter', met: password.length >= 6 },
-        { label: 'Mengandung huruf', met: /[a-zA-Z]/.test(password) },
-        { label: 'Mengandung angka', met: /[0-9]/.test(password) },
-    ];
-
-    const handleSendOtp = () => {
-        if (!phone || phone.length < 10) {
-            setError('Masukkan nomor telepon yang valid');
-            return;
-        }
-        setOtpSent(true);
-        setOtpTimer(60);
+        // Move to verification step
+        setStep('verify');
         setError('');
     };
 
+    // Send OTP
+    const handleSendOtp = () => {
+        setOtpSent(true);
+        setOtp(['', '', '', '', '', '']);
+        setOtpTimer(60);
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+            setOtpTimer((t) => {
+                if (t <= 1) { clearInterval(timerRef.current!); return 0; }
+                return t - 1;
+            });
+        }, 1000);
+        // Focus first OTP input
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
+    };
+
     const handleOtpChange = (index: number, value: string) => {
-        if (value.length > 1) value = value.slice(-1);
         if (!/^\d*$/.test(value)) return;
-
         const newOtp = [...otp];
-        newOtp[index] = value;
+        newOtp[index] = value.slice(-1);
         setOtp(newOtp);
-
-        // Auto-focus next input
-        if (value && index < 5) {
-            otpRefs.current[index + 1]?.focus();
-        }
+        if (value && index < 5) otpRefs.current[index + 1]?.focus();
     };
 
     const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
@@ -79,33 +75,18 @@ export default function RegisterPage() {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Final registration submit with OTP
+    const handleVerifySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-
-        if (password !== confirmPassword) {
-            setError('Password tidak cocok');
-            return;
-        }
-
-        if (password.length < 6) {
-            setError('Password minimal 6 karakter');
-            return;
-        }
-
-        if (mode === 'phone' && !otpSent) {
-            setError('Silakan verifikasi nomor telepon terlebih dahulu');
-            return;
-        }
+        if (otp.join('').length < 6) { setError('Masukkan 6 digit kode OTP'); return; }
 
         setLoading(true);
-
         try {
-            const identifier = mode === 'email' ? email : `+62${phone}`;
-            await register(name, identifier, password);
+            await register(name, email, password);
+            router.push('/dashboard');
         } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setError(error.response?.data?.message || 'Registrasi gagal. Silakan coba lagi.');
+            setError(err instanceof Error ? err.message : 'Registrasi gagal');
         } finally {
             setLoading(false);
         }
@@ -113,274 +94,205 @@ export default function RegisterPage() {
 
     return (
         <div className="auth-container">
-            <div className="auth-card animate-in">
-                {/* Header */}
+            <div className="auth-card animate-in" style={{ maxWidth: 440 }}>
                 <div className="auth-header">
-                    <div className="logo">
-                        <Image src="/logo-app.png" alt="JDIH" width={48} height={48} />
+                    <div className="logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Image src="/logo-awal-jdihn-small.png" alt="JDIH" width={56} height={56} />
                     </div>
-                    <h1>Buat Akun</h1>
-                    <p>Daftar sebagai pengguna Perpustakaan JDIH</p>
+                    <h1>{step === 'form' ? 'Daftar' : 'Verifikasi'}</h1>
+                    <p>Perpustakaan JDIH Kab. Sumedang</p>
                 </div>
 
-                {/* Email / Phone Toggle */}
-                <div className="auth-toggle">
-                    <button
-                        type="button"
-                        className={mode === 'email' ? 'active' : ''}
-                        onClick={() => { setMode('email'); setError(''); setOtpSent(false); }}
-                    >
-                        <Mail size={16} /> Email
-                    </button>
-                    <button
-                        type="button"
-                        className={mode === 'phone' ? 'active' : ''}
-                        onClick={() => { setMode('phone'); setError(''); setOtpSent(false); }}
-                    >
-                        <Phone size={16} /> No. Telepon
-                    </button>
-                </div>
-
-                {/* Error */}
                 {error && (
-                    <div className="auth-error">
-                        <AlertCircle size={16} />
-                        {error}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '10px 14px', marginBottom: 20,
+                        background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)',
+                        borderRadius: 2, fontSize: '0.8125rem', color: 'var(--danger)',
+                    }}>
+                        <AlertCircle size={14} /> {error}
                     </div>
                 )}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="name">Nama Lengkap</label>
-                        <input
-                            id="name"
-                            type="text"
-                            className="form-input"
-                            placeholder="Masukkan nama lengkap"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            autoComplete="name"
-                        />
-                    </div>
-
-                    {mode === 'email' ? (
+                {/* ─── STEP 1: Registration Form ─── */}
+                {step === 'form' && (
+                    <form onSubmit={handleFormSubmit}>
                         <div className="form-group">
-                            <label className="form-label" htmlFor="reg-email">Email</label>
+                            <label>Nama Lengkap</label>
                             <input
-                                id="reg-email"
-                                type="email"
-                                className="form-input"
-                                placeholder="nama@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                autoComplete="email"
+                                type="text"
+                                placeholder="Nama lengkap Anda"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
                             />
                         </div>
-                    ) : (
+
                         <div className="form-group">
-                            <label className="form-label" htmlFor="reg-phone">Nomor Telepon</label>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                                <div style={{
-                                    padding: '12px 14px',
-                                    background: 'var(--input-bg)',
-                                    border: '1px solid var(--input-border)',
-                                    borderRadius: 12,
-                                    color: 'var(--text-secondary)',
-                                    fontSize: '0.9375rem',
-                                    fontWeight: 600,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    whiteSpace: 'nowrap',
-                                }}>
-                                    +62
-                                </div>
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                placeholder="email@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Nomor Telepon</label>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <span style={{
+                                    padding: '10px 12px', border: '1px solid var(--border)',
+                                    background: 'var(--surface)', fontSize: '0.9375rem',
+                                    fontWeight: 600, color: 'var(--text-secondary)', borderRadius: 2,
+                                }}>+62</span>
                                 <input
-                                    id="reg-phone"
                                     type="tel"
-                                    className="form-input"
-                                    placeholder="812xxxxxxxx"
+                                    placeholder="81234567890"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                                    required
                                     style={{ flex: 1 }}
                                 />
                             </div>
+                        </div>
 
-                            {/* Send OTP Button */}
-                            {!otpSent ? (
+                        <div className="form-group">
+                            <label>Password</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Min. 6 karakter"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
                                 <button
                                     type="button"
-                                    onClick={handleSendOtp}
-                                    className="btn btn-ghost"
-                                    style={{
-                                        width: '100%',
-                                        marginTop: 10,
-                                        borderColor: 'var(--primary)',
-                                        color: 'var(--primary)',
-                                    }}
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                                 >
-                                    <ArrowRight size={16} /> Kirim Kode OTP
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
-                            ) : (
-                                <>
-                                    {/* OTP Input */}
-                                    <div style={{ marginTop: 16, textAlign: 'center' }}>
-                                        <div style={{
-                                            fontSize: '0.8rem',
-                                            color: 'var(--text-secondary)',
-                                            marginBottom: 12,
-                                        }}>
-                                            Masukkan 6 digit kode OTP
-                                        </div>
-                                        <div className="otp-container">
-                                            {otp.map((digit, index) => (
-                                                <input
-                                                    key={index}
-                                                    ref={(el) => { otpRefs.current[index] = el; }}
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    className="otp-input"
-                                                    value={digit}
-                                                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                                                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                                                    maxLength={1}
-                                                />
-                                            ))}
-                                        </div>
-                                        <div style={{
-                                            fontSize: '0.75rem',
-                                            color: 'var(--text-muted)',
-                                            marginTop: 8,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: 6,
-                                        }}>
-                                            <Timer size={14} />
-                                            {otpTimer > 0 ? (
-                                                `Kirim ulang dalam ${otpTimer}s`
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleSendOtp}
-                                                    style={{
-                                                        background: 'none',
-                                                        border: 'none',
-                                                        color: 'var(--primary)',
-                                                        cursor: 'pointer',
-                                                        fontWeight: 600,
-                                                        fontSize: '0.75rem',
-                                                    }}
-                                                >
-                                                    Kirim Ulang OTP
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+                            </div>
                         </div>
-                    )}
 
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="reg-password">Password</label>
-                        <div style={{ position: 'relative' }}>
+                        <div className="form-group">
+                            <label>Konfirmasi Password</label>
                             <input
-                                id="reg-password"
-                                type={showPassword ? 'text' : 'password'}
-                                className="form-input"
-                                placeholder="Buat password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                autoComplete="new-password"
-                                style={{ paddingRight: 48 }}
+                                type="password"
+                                placeholder="Ulangi password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                             />
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            style={{ width: '100%', marginTop: 8, color: '#fff' }}
+                        >
+                            Lanjutkan
+                        </button>
+
+                        <div className="auth-footer">
+                            Sudah punya akun? <Link href="/login">Masuk</Link>
+                        </div>
+                    </form>
+                )}
+
+                {/* ─── STEP 2: OTP Verification ─── */}
+                {step === 'verify' && (
+                    <div>
+                        {/* Back button */}
+                        <button
+                            onClick={() => { setStep('form'); setOtpSent(false); setOtp(['', '', '', '', '', '']); setError(''); }}
+                            className="btn btn-ghost"
+                            style={{ padding: '4px 0', marginBottom: 16, fontSize: '0.8125rem' }}
+                        >
+                            <ArrowLeft size={14} /> Kembali ke form
+                        </button>
+
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: 24 }}>
+                            Pilih metode verifikasi untuk mengonfirmasi akun Anda.
+                        </p>
+
+                        {/* Choose verification method */}
+                        <div className="auth-toggle" style={{ marginBottom: 24 }}>
                             <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                style={{
-                                    position: 'absolute',
-                                    right: 12,
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    padding: 4,
-                                }}
+                                className={verifyMethod === 'email' ? 'active' : ''}
+                                onClick={() => { setVerifyMethod('email'); setOtpSent(false); setOtp(['', '', '', '', '', '']); }}
                             >
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                <Mail size={14} /> Email
+                            </button>
+                            <button
+                                className={verifyMethod === 'phone' ? 'active' : ''}
+                                onClick={() => { setVerifyMethod('phone'); setOtpSent(false); setOtp(['', '', '', '', '', '']); }}
+                            >
+                                <Phone size={14} /> SMS
                             </button>
                         </div>
 
-                        {/* Password Requirements */}
-                        {password.length > 0 && (
-                            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                {passwordRequirements.map((req) => (
-                                    <div
-                                        key={req.label}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 6,
-                                            fontSize: '0.75rem',
-                                            color: req.met ? 'var(--success)' : 'var(--text-muted)',
-                                        }}
-                                    >
-                                        <CheckCircle2 size={14} />
-                                        {req.label}
-                                    </div>
-                                ))}
+                        {/* Destination info */}
+                        <div style={{
+                            padding: '12px 16px', background: 'var(--accent-bg)', border: '1px solid rgba(196,30,58,0.1)',
+                            borderRadius: 2, marginBottom: 20, fontSize: '0.875rem',
+                        }}>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600, marginBottom: 4 }}>
+                                Kirim kode ke
                             </div>
-                        )}
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="confirm-password">Konfirmasi Password</label>
-                        <input
-                            id="confirm-password"
-                            type={showPassword ? 'text' : 'password'}
-                            className="form-input"
-                            placeholder="Ulangi password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            required
-                            autoComplete="new-password"
-                        />
-                        {confirmPassword.length > 0 && password !== confirmPassword && (
-                            <div style={{ marginTop: 6, fontSize: '0.75rem', color: 'var(--danger)' }}>
-                                Password tidak cocok
+                            <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {verifyMethod === 'email' ? email : `+62${phone}`}
                             </div>
-                        )}
-                    </div>
+                        </div>
 
-                    <button
-                        type="submit"
-                        className="btn btn-primary btn-lg"
-                        style={{ width: '100%', marginTop: 8 }}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <>
-                                <Loader2 size={18} style={{ animation: 'spin 0.8s linear infinite' }} />
-                                Mendaftar...
-                            </>
+                        {!otpSent ? (
+                            <button
+                                onClick={handleSendOtp}
+                                className="btn btn-primary"
+                                style={{ width: '100%', color: '#fff' }}
+                            >
+                                <CheckCircle size={16} /> Kirim Kode OTP
+                            </button>
                         ) : (
-                            'Daftar Sekarang'
-                        )}
-                    </button>
-                </form>
+                            <form onSubmit={handleVerifySubmit}>
+                                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Masukkan Kode OTP
+                                </label>
+                                <div className="otp-container">
+                                    {otp.map((digit, i) => (
+                                        <input
+                                            key={i}
+                                            ref={(el) => { otpRefs.current[i] = el; }}
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength={1}
+                                            value={digit}
+                                            onChange={(e) => handleOtpChange(i, e.target.value)}
+                                            onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                                        />
+                                    ))}
+                                </div>
 
-                {/* Footer */}
-                <div className="auth-footer">
-                    Sudah punya akun?{' '}
-                    <Link href="/login">Masuk di sini</Link>
-                </div>
+                                {/* Timer / Resend */}
+                                <div style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 12, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                                    <Timer size={12} />
+                                    {otpTimer > 0 ? `${otpTimer} detik` : (
+                                        <button type="button" onClick={handleSendOtp} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', fontSize: 'inherit' }}>
+                                            Kirim ulang
+                                        </button>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="btn btn-primary"
+                                    style={{ width: '100%', opacity: loading ? 0.6 : 1, color: '#fff' }}
+                                >
+                                    {loading ? 'Memuat...' : 'Verifikasi & Daftar'}
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

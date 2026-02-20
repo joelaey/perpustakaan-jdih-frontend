@@ -1,177 +1,131 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { booksAPI } from '@/lib/api';
-import {
-    BookOpen, ArrowLeft, Download, Calendar, User as UserIcon,
-    Building2, MapPin, Hash, FileText, Globe, Sparkles,
-} from 'lucide-react';
+import { BookOpen, Download, Calendar, User, Building, Tag, FileText, ArrowLeft } from 'lucide-react';
 
 interface Book {
-    id: number;
-    title: string;
-    author: string;
-    publisher: string;
-    publish_place: string;
-    year: number;
-    isbn: string;
-    subject: string;
-    field_type: string;
-    physical_description: string;
-    language: string;
-    location: string;
-    file_url: string;
-    cover: string;
-    downloaded: number;
-    view_count: number;
+    id: number; title: string; author: string; publisher: string;
+    year: number; field_type: string; cover: string; subject: string;
+    description: string; isbn: string; language: string;
+    page_count: number; file_url: string;
 }
 
 export default function BookDetailPage() {
     const params = useParams();
-    const bookId = Number(params.id);
     const [book, setBook] = useState<Book | null>(null);
     const [related, setRelated] = useState<Book[]>([]);
     const [loading, setLoading] = useState(true);
-    const [loadingRelated, setLoadingRelated] = useState(true);
 
     useEffect(() => {
-        if (!bookId) return;
-
+        if (!params.id) return;
         setLoading(true);
-        booksAPI.getById(bookId)
-            .then((res) => setBook(res.data.data))
+        booksAPI.getById(Number(params.id))
+            .then(res => { setBook(res.data.data || res.data); })
             .catch(() => setBook(null))
             .finally(() => setLoading(false));
 
-        setLoadingRelated(true);
-        booksAPI.getRecommendations(bookId)
-            .then((res) => setRelated(res.data.data || []))
-            .catch(() => setRelated([]))
-            .finally(() => setLoadingRelated(false));
-    }, [bookId]);
-
-    const metaItems = book ? [
-        { icon: UserIcon, label: 'Penulis', value: book.author },
-        { icon: Building2, label: 'Penerbit', value: book.publisher },
-        { icon: MapPin, label: 'Tempat Terbit', value: book.publish_place },
-        { icon: Calendar, label: 'Tahun', value: book.year?.toString() },
-        { icon: Hash, label: 'ISBN/ISSN', value: book.isbn },
-        { icon: FileText, label: 'Subjek', value: book.subject },
-        { icon: Sparkles, label: 'Bidang Hukum', value: book.field_type },
-        { icon: FileText, label: 'Deskripsi Fisik', value: book.physical_description },
-        { icon: Globe, label: 'Bahasa', value: book.language },
-        { icon: MapPin, label: 'Lokasi', value: book.location },
-    ].filter((m) => m.value) : [];
+        booksAPI.getRecommendations(Number(params.id))
+            .then(res => setRelated((res.data.data || []).slice(0, 5)))
+            .catch(() => setRelated([]));
+    }, [params.id]);
 
     if (loading) {
         return (
-            <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
+            <div style={{ minHeight: '100vh' }}>
                 <Navbar />
-                <main style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.5rem', paddingTop: '6rem' }}>
-                    <div className="book-detail-hero">
-                        <div className="skeleton book-detail-cover" />
+                <div className="page-container">
+                    <div className="book-detail">
+                        <div className="skeleton" style={{ aspectRatio: '2/3', width: '100%' }} />
                         <div>
-                            <div className="skeleton" style={{ height: 32, marginBottom: 16 }} />
-                            <div className="skeleton" style={{ height: 20, width: '60%', marginBottom: 12 }} />
-                            <div className="skeleton" style={{ height: 20, width: '40%', marginBottom: 12 }} />
-                            <div className="skeleton" style={{ height: 20, width: '50%' }} />
+                            <div className="skeleton" style={{ height: 32, width: '70%', marginBottom: 20 }} />
+                            <div className="skeleton" style={{ height: 16, width: '40%', marginBottom: 32 }} />
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="skeleton" style={{ height: 16, marginBottom: 16 }} />
+                            ))}
                         </div>
                     </div>
-                </main>
+                </div>
             </div>
         );
     }
 
     if (!book) {
         return (
-            <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
+            <div style={{ minHeight: '100vh' }}>
                 <Navbar />
-                <main style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.5rem', paddingTop: '6rem' }}>
-                    <div className="empty-state">
+                <div className="page-container">
+                    <div className="empty-state" style={{ paddingTop: 80 }}>
                         <div className="icon"><BookOpen size={48} /></div>
                         <h3>Buku tidak ditemukan</h3>
-                        <p>Buku yang Anda cari tidak ada atau telah dihapus</p>
-                        <Link href="/books" className="btn btn-primary" style={{ marginTop: 20 }}>
-                            Kembali ke Katalog
+                        <p>Buku yang Anda cari tidak tersedia</p>
+                        <Link href="/books" className="btn btn-primary" style={{ marginTop: 24 }}>
+                            <ArrowLeft size={16} /> Kembali ke Katalog
                         </Link>
                     </div>
-                </main>
+                </div>
             </div>
         );
     }
 
+    const metaItems = [
+        { icon: User, label: 'Penulis', value: book.author },
+        { icon: Building, label: 'Penerbit', value: book.publisher },
+        { icon: Calendar, label: 'Tahun', value: book.year },
+        { icon: Tag, label: 'Bidang', value: book.field_type },
+        { icon: FileText, label: 'Subjek', value: book.subject },
+        { icon: FileText, label: 'ISBN', value: book.isbn },
+        { icon: FileText, label: 'Halaman', value: book.page_count ? `${book.page_count} halaman` : null },
+    ].filter(m => m.value);
+
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
+        <div style={{ minHeight: '100vh' }}>
             <Navbar />
 
-            <main style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.5rem', paddingTop: '6rem' }}>
-                {/* Back button */}
-                <Link href="/books" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    color: 'var(--text-secondary)', textDecoration: 'none',
-                    fontSize: '0.9rem', marginBottom: 24,
-                    padding: '6px 12px', borderRadius: 8,
-                    transition: 'all 0.2s ease',
-                }}>
-                    <ArrowLeft size={18} /> Kembali ke Katalog
+            <div className="page-container">
+                {/* Back Link */}
+                <Link href="/books" className="btn btn-ghost" style={{ marginBottom: 24, padding: '6px 0' }}>
+                    <ArrowLeft size={16} /> Kembali ke Katalog
                 </Link>
 
-                {/* Book Detail Hero */}
-                <div className="book-detail-hero animate-in">
+                {/* Book Detail */}
+                <div className="book-detail animate-in">
                     <div className="book-detail-cover">
                         {book.cover ? (
                             <img src={book.cover} alt={book.title} />
                         ) : (
-                            <BookOpen size={64} style={{ opacity: 0.2, color: 'var(--primary)' }} />
+                            <BookOpen size={64} style={{ color: 'var(--text-muted)' }} />
                         )}
                     </div>
 
                     <div className="book-detail-info">
                         <h1>{book.title}</h1>
 
-                        {/* Tags */}
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-                            {book.field_type && (
-                                <span style={{
-                                    padding: '4px 12px', borderRadius: 20,
-                                    background: 'rgba(249, 115, 22, 0.1)',
-                                    color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600,
-                                }}>
-                                    {book.field_type}
-                                </span>
-                            )}
-                            {book.year && (
-                                <span style={{
-                                    padding: '4px 12px', borderRadius: 20,
-                                    background: 'var(--hover-bg)',
-                                    color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 500,
-                                }}>
-                                    {book.year}
-                                </span>
-                            )}
-                        </div>
+                        {book.description && (
+                            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 24 }}>
+                                {book.description}
+                            </p>
+                        )}
 
-                        {/* Meta rows */}
-                        {metaItems.map(({ icon: Icon, label, value }) => (
-                            <div className="meta-row" key={label}>
-                                <div className="meta-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <Icon size={14} /> {label}
+                        {metaItems.map((item, i) => (
+                            <div key={i} className="meta-row">
+                                <div className="meta-label">
+                                    <item.icon size={16} /> {item.label}
                                 </div>
-                                <div className="meta-value">{value}</div>
+                                <div className="meta-value">{item.value}</div>
                             </div>
                         ))}
 
-                        {/* Download Button */}
                         {book.file_url && (
                             <a
                                 href={book.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn btn-primary btn-lg"
-                                style={{ marginTop: 24, width: '100%', maxWidth: 300 }}
+                                style={{ marginTop: 32 }}
                             >
                                 <Download size={18} /> Download PDF
                             </a>
@@ -179,59 +133,36 @@ export default function BookDetailPage() {
                     </div>
                 </div>
 
-                {/* Related Books Section */}
-                <div className="related-books-section">
-                    <h2>
-                        <Sparkles size={20} style={{ color: 'var(--primary)' }} />
-                        Buku Terkait
-                    </h2>
+                {/* Related Books */}
+                {related.length > 0 && (
+                    <div className="related-section">
+                        <span className="section-label">Buku Terkait</span>
+                        <h2 style={{ marginTop: 8 }}>Rekomendasi untuk Anda</h2>
 
-                    {loadingRelated ? (
-                        <div className="book-grid">
-                            {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="book-card">
-                                    <div className="skeleton" style={{ height: 200 }} />
-                                    <div style={{ padding: 16 }}>
-                                        <div className="skeleton" style={{ height: 18, marginBottom: 8 }} />
-                                        <div className="skeleton" style={{ height: 14, width: '60%' }} />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : related.length > 0 ? (
-                        <div className="book-grid">
-                            {related.map((b) => (
-                                <Link href={`/books/${b.id}`} key={b.id} className="book-card">
+                        <div className="book-grid" style={{ marginTop: 32 }}>
+                            {related.map((r) => (
+                                <Link href={`/books/${r.id}`} key={r.id} className="book-card">
                                     <div className="book-cover">
-                                        {b.cover ? (
-                                            <img src={b.cover} alt={b.title} loading="lazy" />
+                                        {r.cover ? (
+                                            <img src={r.cover} alt={r.title} loading="lazy" />
                                         ) : (
-                                            <div className="no-cover">
-                                                <BookOpen size={48} />
-                                            </div>
+                                            <div className="no-cover"><BookOpen size={32} /></div>
                                         )}
                                     </div>
                                     <div className="book-info">
-                                        <div className="book-title">{b.title}</div>
-                                        <div className="book-author">{b.author || 'Penulis tidak diketahui'}</div>
-                                        <div className="book-meta">
-                                            {b.year && <span className="tag">{b.year}</span>}
-                                            {b.field_type && <span className="tag">{b.field_type}</span>}
-                                        </div>
+                                        <div className="book-title">{r.title}</div>
+                                        <div className="book-author">{r.author || 'Penulis tidak diketahui'}</div>
                                     </div>
                                 </Link>
                             ))}
                         </div>
-                    ) : (
-                        <div style={{
-                            textAlign: 'center', padding: '40px 20px',
-                            color: 'var(--text-muted)', fontSize: '0.9rem',
-                        }}>
-                            Belum ada rekomendasi buku terkait
-                        </div>
-                    )}
-                </div>
-            </main>
+                    </div>
+                )}
+            </div>
+
+            <footer className="site-footer">
+                © 2026 Perpustakaan JDIH Kabupaten Sumedang
+            </footer>
         </div>
     );
 }
