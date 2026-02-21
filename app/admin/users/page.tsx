@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import Navbar from '@/components/Navbar';
+import { useAuth } from '@/contexts/AuthContext';
 import { usersAPI } from '@/lib/api';
 import { Users, Plus, Trash2, Edit, Shield, User as UserIcon, Search, X, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -15,6 +16,7 @@ interface UserData {
 }
 
 export default function AdminUsersPage() {
+    const { user, updateUser } = useAuth();
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -55,6 +57,9 @@ export default function AdminUsersPage() {
                 const updateData: Record<string, unknown> = { name: form.name, email: form.email, role: form.role };
                 if (form.password) updateData.password = form.password;
                 await usersAPI.update(editingUser.id, updateData);
+                if (user?.id === editingUser.id) {
+                    updateUser({ name: form.name, email: form.email, role: form.role as 'admin' | 'pengguna' });
+                }
                 setMessage({ type: 'success', text: 'Pengguna berhasil diperbarui' });
             } else {
                 await usersAPI.create(form);
