@@ -136,18 +136,10 @@ export default function ChatPage() {
             <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
                 <Navbar />
                 <main style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1rem', paddingTop: '5rem', height: 'calc(100vh - 5rem)' }}>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: showSidebar ? (activePartner ? '300px 1fr' : '1fr') : '1fr',
-                        height: '100%', border: '1px solid var(--glass-border)', borderRadius: '16px 16px 0 0',
-                        overflow: 'hidden', background: 'var(--glass-bg)',
-                    }}>
+                    <div className={`chat-container ${showSidebar && activePartner ? 'with-partner' : showSidebar ? 'sidebar-only' : 'main-only'}`}>
                         {/* Left: Conversations List (admin only shows sidebar) */}
                         {showSidebar && (
-                            <div style={{
-                                borderRight: '1px solid var(--glass-border)',
-                                overflowY: 'auto',
-                            }}>
+                            <div className="chat-sidebar">
                                 <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
                                     <MessageCircle size={22} style={{ color: 'var(--primary)' }} />
                                     <div>
@@ -205,7 +197,7 @@ export default function ChatPage() {
 
                         {/* Right: Messages Area */}
                         {activePartner ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="chat-main" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                 {/* Chat Header */}
                                 <div style={{
                                     padding: '1rem 1.25rem', borderBottom: '1px solid var(--glass-border)',

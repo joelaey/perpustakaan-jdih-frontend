@@ -1741,4 +1741,55 @@ img {
     .dashboard-content {
         padding: 24px 16px;
     }
+
+    /* Form Layout */
+    .admin-form-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Chat Layout */
+    .chat-container.with-partner .chat-sidebar {
+        display: none !important;
+    }
+
+    .chat-container.with-partner {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stats & Quick Actions */
+    .stats-grid,
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Admin Specific Layouts --- */
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.chat-container {
+    display: grid;
+    height: 100%;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+    background: var(--glass-bg);
+}
+
+.chat-container.with-partner {
+    grid-template-columns: 300px 1fr;
+}
+
+.chat-container.sidebar-only {
+    grid-template-columns: 1fr;
+}
+
+.chat-container.main-only {
+    grid-template-columns: 1fr;
 }

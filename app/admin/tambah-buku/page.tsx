@@ -193,7 +193,7 @@ function BookForm({ initialData, mode, bookId }: BookFormProps) {
             )}
 
             <form onSubmit={handleSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '1.5rem', alignItems: 'start' }}>
+                <div className="admin-form-grid">
 
                     {/* Left: Form Fields */}
                     <div style={{
