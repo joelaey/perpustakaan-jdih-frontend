@@ -111,10 +111,9 @@ export default function AdminUsersPage() {
                                 {users.length} pengguna terdaftar
                             </p>
                         </div>
-                        <button onClick={openAddModal} style={{
+                        <button onClick={openAddModal} className="btn-primary" style={{
                             display: 'flex', alignItems: 'center', gap: 8, padding: '0.7rem 1.2rem',
-                            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                            color: '#fff', border: 'none', borderRadius: 12, cursor: 'pointer',
+                            border: 'none', borderRadius: 12, cursor: 'pointer',
                             fontWeight: 600, fontSize: '0.9rem',
                         }}>
                             <Plus size={18} /> Tambah Pengguna
@@ -181,9 +180,9 @@ export default function AdminUsersPage() {
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                         <div style={{
                                                             width: 36, height: 36, borderRadius: '50%',
-                                                            background: user.role === 'admin' ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
+                                                            background: user.role === 'admin' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(156, 163, 175, 0.15)',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            color: user.role === 'admin' ? '#ef4444' : '#3b82f6',
+                                                            color: user.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)',
                                                         }}>
                                                             {user.role === 'admin' ? <Shield size={16} /> : <UserIcon size={16} />}
                                                         </div>
@@ -194,8 +193,8 @@ export default function AdminUsersPage() {
                                                 <td style={{ padding: '14px 16px' }}>
                                                     <span style={{
                                                         padding: '4px 12px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 500,
-                                                        background: user.role === 'admin' ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
-                                                        color: user.role === 'admin' ? '#ef4444' : '#3b82f6',
+                                                        background: user.role === 'admin' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                                                        color: user.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)',
                                                     }}>{user.role === 'admin' ? 'Admin' : 'Pengguna'}</span>
                                                 </td>
                                                 <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -205,12 +204,12 @@ export default function AdminUsersPage() {
                                                     <div style={{ display: 'flex', gap: 6 }}>
                                                         <button onClick={() => openEditModal(user)} style={{
                                                             width: 34, height: 34, borderRadius: 8, border: 'none',
-                                                            background: 'rgba(59,130,246,0.1)', color: '#3b82f6', cursor: 'pointer',
+                                                            background: 'rgba(220, 38, 38, 0.1)', color: 'var(--accent)', cursor: 'pointer',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                         }}><Edit size={15} /></button>
                                                         <button onClick={() => handleDelete(user.id, user.name)} style={{
                                                             width: 34, height: 34, borderRadius: 8, border: 'none',
-                                                            background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: 'pointer',
+                                                            background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', cursor: 'pointer',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                         }}><Trash2 size={15} /></button>
                                                     </div>
@@ -265,10 +264,9 @@ export default function AdminUsersPage() {
                                         background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)',
                                         color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 500, fontSize: '0.95rem',
                                     }}>Batal</button>
-                                    <button type="submit" style={{
+                                    <button type="submit" className="btn-primary" style={{
                                         flex: 1, padding: '0.75rem', borderRadius: 12, border: 'none',
-                                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                        color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem',
+                                        cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem',
                                     }}>{editingUser ? 'Simpan' : 'Tambah'}</button>
                                 </div>
                             </form>
@@ -282,8 +280,8 @@ export default function AdminUsersPage() {
                         to { opacity: 1; transform: translateY(0); }
                     }
                     input:focus, select:focus {
-                        border-color: var(--primary) !important;
-                        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+                        border-color: var(--accent) !important;
+                        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
                     }
                 `}</style>
             </div>
