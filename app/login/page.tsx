@@ -22,8 +22,12 @@ export default function LoginPage() {
         setLoading(true);
         setError('');
         try {
-            await login(email, password);
-            router.push('/dashboard');
+            const userData = await login(email, password);
+            if (userData.role === 'admin') {
+                router.push('/admin/dashboard');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Login gagal';
             setError(msg);

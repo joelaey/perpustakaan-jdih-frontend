@@ -17,7 +17,7 @@ interface AuthContextType {
     isLoading: boolean;
     isAuthenticated: boolean;
     isAdmin: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<User>;
     register: (name: string, email: string, password: string) => Promise<void>;
     logout: () => void;
     updateUser: (user: Partial<User>) => void;
@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(newUser);
         localStorage.setItem('jdih_token', newToken);
         localStorage.setItem('jdih_user', JSON.stringify(newUser));
+        return newUser;
     }, []);
 
     const register = useCallback(async (name: string, email: string, password: string) => {
