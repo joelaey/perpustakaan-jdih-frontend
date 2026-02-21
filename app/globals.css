@@ -181,6 +181,12 @@ img {
     border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
+.navbar.hidden {
+    transform: translateY(calc(-100% - 20px));
+    opacity: 0;
+    pointer-events: none;
+}
+
 /* --- Dark Mode Floating Navbar Overrides --- */
 [data-theme="dark"] .navbar {
     background: rgba(15, 15, 15, 0.45);

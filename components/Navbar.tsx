@@ -13,12 +13,28 @@ export default function Navbar() {
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
+    const [hidden, setHidden] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handler = () => setScrolled(window.scrollY > 10);
+        let lastScrollY = window.scrollY;
+
+        const handler = () => {
+            const currentScrollY = window.scrollY;
+            setScrolled(currentScrollY > 10);
+
+            // Hide navbar on scroll down, show on scroll up
+            if (currentScrollY > lastScrollY && currentScrollY > 80) {
+                setHidden(true);
+            } else if (currentScrollY < lastScrollY) {
+                setHidden(false);
+            }
+
+            lastScrollY = currentScrollY;
+        };
+
         window.addEventListener('scroll', handler, { passive: true });
         return () => window.removeEventListener('scroll', handler);
     }, []);
@@ -70,7 +86,7 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+            <nav className={`navbar ${scrolled ? 'scrolled' : ''} ${hidden ? 'hidden' : ''}`}>
                 {/* Left Links */}
                 <div className="navbar-left">
                     {leftLinks.map((link) => (
