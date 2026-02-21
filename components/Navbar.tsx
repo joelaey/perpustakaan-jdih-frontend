@@ -62,7 +62,7 @@ export default function Navbar() {
     ];
 
     // Different left links for admin vs public
-    const isAdminRoute = pathname.startsWith('/admin') || pathname === '/dashboard';
+    const isAdminRoute = pathname.startsWith('/admin') || pathname === '/dashboard' || (isAdmin && pathname === '/chat');
     const leftLinks = isAuthenticated && isAdmin && isAdminRoute
         ? [
             { href: '/admin/dashboard', label: 'Panel Admin' },

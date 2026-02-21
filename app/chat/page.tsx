@@ -141,7 +141,7 @@ export default function ChatPage() {
                         {showSidebar && (
                             <div className="chat-sidebar">
                                 <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <MessageCircle size={22} style={{ color: 'var(--primary)' }} />
+                                    <MessageCircle size={22} style={{ color: 'var(--accent)' }} />
                                     <div>
                                         <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Pesan Pengguna</h2>
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>Semua admin dapat membalas</p>
@@ -159,15 +159,15 @@ export default function ChatPage() {
                                         <button key={conv.partner_id} onClick={() => openChat(conv)} style={{
                                             display: 'flex', alignItems: 'center', gap: 12, width: '100%',
                                             padding: '0.9rem 1.25rem', border: 'none', cursor: 'pointer',
-                                            background: activePartner?.partner_id === conv.partner_id ? 'rgba(59,130,246,0.08)' : 'transparent',
+                                            background: activePartner?.partner_id === conv.partner_id ? 'rgba(220,38,38,0.08)' : 'transparent',
                                             borderBottom: '1px solid var(--glass-border)', textAlign: 'left',
                                             transition: 'background 0.15s',
                                         }}>
                                             <div style={{
                                                 width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                                                background: 'rgba(59,130,246,0.15)',
+                                                background: 'rgba(220,38,38,0.15)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: '#3b82f6',
+                                                color: 'var(--accent)',
                                             }}>
                                                 <UserIcon size={18} />
                                             </div>
@@ -183,7 +183,7 @@ export default function ChatPage() {
                                                     {conv.unread_count > 0 && (
                                                         <span style={{
                                                             minWidth: 20, height: 20, borderRadius: 10, fontSize: '0.7rem',
-                                                            background: 'var(--primary)', color: '#fff', display: 'flex',
+                                                            background: 'var(--accent)', color: '#fff', display: 'flex',
                                                             alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 4px',
                                                         }}>{conv.unread_count}</span>
                                                     )}
@@ -212,9 +212,9 @@ export default function ChatPage() {
                                     )}
                                     <div style={{
                                         width: 36, height: 36, borderRadius: '50%',
-                                        background: isAdmin ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)',
+                                        background: 'rgba(220,38,38,0.15)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: isAdmin ? '#3b82f6' : '#ef4444',
+                                        color: '#ef4444',
                                     }}>
                                         {isAdmin ? <UserIcon size={16} /> : <Shield size={16} />}
                                     </div>
@@ -242,9 +242,7 @@ export default function ChatPage() {
                                                 <div key={msg.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
                                                     <div style={{
                                                         maxWidth: '70%', padding: '0.6rem 1rem', borderRadius: 16,
-                                                        background: mine
-                                                            ? 'linear-gradient(135deg, var(--primary), var(--secondary))'
-                                                            : 'var(--bg-secondary)',
+                                                        background: mine ? 'var(--accent)' : 'var(--bg-secondary)',
                                                         color: mine ? '#fff' : 'var(--text-primary)',
                                                         borderBottomRightRadius: mine ? 4 : 16,
                                                         borderBottomLeftRadius: mine ? 16 : 4,
@@ -291,10 +289,9 @@ export default function ChatPage() {
                                             color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none',
                                         }}
                                     />
-                                    <button type="submit" disabled={sending || !newMsg.trim()} style={{
+                                    <button type="submit" className="btn-primary" disabled={sending || !newMsg.trim()} style={{
                                         width: 44, height: 44, borderRadius: 12, border: 'none',
-                                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                        color: '#fff', cursor: sending ? 'not-allowed' : 'pointer',
+                                        cursor: sending ? 'not-allowed' : 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         opacity: sending || !newMsg.trim() ? 0.5 : 1,
                                     }}>
