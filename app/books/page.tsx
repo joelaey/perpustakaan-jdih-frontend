@@ -16,6 +16,38 @@ interface Meta {
     current_page: number; per_page: number; total: number; last_page: number;
 }
 
+function BookCard({ book }: { book: Book }) {
+    const [imgError, setImgError] = useState(false);
+
+    // Ensure URL is absolute or properly relative to the API
+    const coverUrl = book.cover?.startsWith('http')
+        ? book.cover
+        : book.cover
+            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
+            : '';
+
+    return (
+        <Link href={`/books/${book.id}`} className="book-card">
+            <div className="book-cover">
+                {coverUrl && !imgError ? (
+                    <img
+                        src={coverUrl}
+                        alt={book.title}
+                        loading="lazy"
+                        onError={() => setImgError(true)}
+                    />
+                ) : (
+                    <div className="no-cover"><BookOpen size={40} /></div>
+                )}
+            </div>
+            <div className="book-info">
+                <div className="book-title">{book.title}</div>
+                <div className="book-author">{book.author || 'Penulis tidak diketahui'}</div>
+            </div>
+        </Link>
+    );
+}
+
 export default function BooksPage() {
     return (
         <Suspense fallback={
@@ -160,19 +192,7 @@ function BooksContent() {
                 ) : books.length > 0 ? (
                     <div className="book-grid">
                         {books.map((book) => (
-                            <Link href={`/books/${book.id}`} key={book.id} className="book-card">
-                                <div className="book-cover">
-                                    {book.cover ? (
-                                        <img src={book.cover} alt={book.title} loading="lazy" />
-                                    ) : (
-                                        <div className="no-cover"><BookOpen size={40} /></div>
-                                    )}
-                                </div>
-                                <div className="book-info">
-                                    <div className="book-title">{book.title}</div>
-                                    <div className="book-author">{book.author || 'Penulis tidak diketahui'}</div>
-                                </div>
-                            </Link>
+                            <BookCard key={book.id} book={book} />
                         ))}
                     </div>
                 ) : (
