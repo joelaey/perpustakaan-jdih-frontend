@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import Navbar from '@/components/Navbar';
-import { borrowingsAPI } from '@/lib/api';
-import { BookOpen, Clock, CheckCircle, XCircle, RotateCcw, AlertCircle, ChevronDown } from 'lucide-react';
+import { borrowingsAPI, messagesAPI } from '@/lib/api';
+import { BookOpen, Clock, CheckCircle, XCircle, RotateCcw, AlertCircle, ChevronDown, Eye, X, Send } from 'lucide-react';
 
 interface Borrowing {
     id: number;
+    user_id: number;
     user_name: string;
     user_email: string;
     book_title: string;
@@ -30,12 +32,15 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
 };
 
 export default function AdminBorrowingsPage() {
+    const router = useRouter();
     const [borrowings, setBorrowings] = useState<Borrowing[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
     const [stats, setStats] = useState({ pending: 0, approved: 0, borrowed: 0, returned: 0, rejected: 0, total: 0 });
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const [actionId, setActionId] = useState<number | null>(null);
+    const [selectedBorrowing, setSelectedBorrowing] = useState<Borrowing | null>(null);
+    const [chatMessage, setChatMessage] = useState('');
+    const [sendingChat, setSendingChat] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -59,10 +64,31 @@ export default function AdminBorrowingsPage() {
         try {
             await borrowingsAPI.updateStatus(id, status);
             setMessage({ type: 'success', text: `Status berhasil diubah ke "${statusConfig[status]?.label}"` });
-            setActionId(null);
+            if (selectedBorrowing && selectedBorrowing.id === id) {
+                setSelectedBorrowing({ ...selectedBorrowing, status });
+            }
             fetchData();
         } catch {
             setMessage({ type: 'error', text: 'Gagal mengubah status' });
+        }
+    };
+
+    const openDetail = (b: Borrowing) => {
+        setSelectedBorrowing(b);
+        setChatMessage(`Halo ${b.user_name}, terkait pengajuan peminjaman buku "${b.book_title}"...\n`);
+    };
+
+    const handleSendChat = async () => {
+        if (!selectedBorrowing || !chatMessage.trim()) return;
+        setSendingChat(true);
+        try {
+            await messagesAPI.send(selectedBorrowing.user_id, chatMessage);
+            setMessage({ type: 'success', text: 'Pesan berhasil dikirim ke pengguna.' });
+            setChatMessage('');
+        } catch {
+            setMessage({ type: 'error', text: 'Gagal mengirim pesan.' });
+        } finally {
+            setSendingChat(false);
         }
     };
 
@@ -147,44 +173,13 @@ export default function AdminBorrowingsPage() {
                                                         {formatDate(b.due_date)}
                                                     </td>
                                                     <td style={{ padding: '14px 16px', position: 'relative' }}>
-                                                        <button onClick={() => setActionId(actionId === b.id ? null : b.id)} style={{
-                                                            display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px',
-                                                            borderRadius: 8, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.03)',
-                                                            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.8rem',
+                                                        <button onClick={() => openDetail(b)} style={{
+                                                            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+                                                            borderRadius: 8, border: 'none', background: 'rgba(59,130,246,0.1)',
+                                                            color: '#3b82f6', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500
                                                         }}>
-                                                            Aksi <ChevronDown size={14} />
+                                                            <Eye size={16} /> Detail
                                                         </button>
-                                                        {actionId === b.id && (
-                                                            <div style={{
-                                                                position: 'absolute', top: '100%', right: 16, zIndex: 100,
-                                                                background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
-                                                                borderRadius: 12, padding: 6, minWidth: 160, boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                                                            }}>
-                                                                {b.status === 'pending' && (
-                                                                    <>
-                                                                        <button onClick={() => handleAction(b.id, 'approved')} style={actionBtnStyle('#3b82f6')}>
-                                                                            <CheckCircle size={14} /> Setujui
-                                                                        </button>
-                                                                        <button onClick={() => handleAction(b.id, 'rejected')} style={actionBtnStyle('#ef4444')}>
-                                                                            <XCircle size={14} /> Tolak
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                                {b.status === 'approved' && (
-                                                                    <button onClick={() => handleAction(b.id, 'borrowed')} style={actionBtnStyle('#8b5cf6')}>
-                                                                        <BookOpen size={14} /> Tandai Dipinjam
-                                                                    </button>
-                                                                )}
-                                                                {b.status === 'borrowed' && (
-                                                                    <button onClick={() => handleAction(b.id, 'returned')} style={actionBtnStyle('#22c55e')}>
-                                                                        <RotateCcw size={14} /> Tandai Dikembalikan
-                                                                    </button>
-                                                                )}
-                                                                {['returned', 'rejected'].includes(b.status) && (
-                                                                    <div style={{ padding: '8px 12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tidak ada aksi</div>
-                                                                )}
-                                                            </div>
-                                                        )}
                                                     </td>
                                                 </tr>
                                             );
@@ -195,6 +190,111 @@ export default function AdminBorrowingsPage() {
                         )}
                     </div>
                 </main>
+
+                {/* Detail Modal */}
+                {selectedBorrowing && (
+                    <div style={{
+                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem',
+                    }} onClick={() => setSelectedBorrowing(null)}>
+                        <div onClick={e => e.stopPropagation()} style={{
+                            background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+                            borderRadius: 20, padding: '2rem', width: '100%', maxWidth: 500,
+                            animation: 'fadeSlideDown 0.2s ease', position: 'relative',
+                            maxHeight: '90vh', overflowY: 'auto'
+                        }}>
+                            <button onClick={() => setSelectedBorrowing(null)} style={{
+                                position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer'
+                            }}><X size={20} /></button>
+
+                            <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
+                                Detail Peminjaman
+                            </h2>
+
+                            <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: 12, marginBottom: 16 }}>
+                                <div style={{ marginBottom: 12 }}>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>Peminjam</span>
+                                    <strong style={{ color: 'var(--text-primary)' }}>{selectedBorrowing.user_name}</strong> ({selectedBorrowing.user_email})
+                                </div>
+                                <div style={{ marginBottom: 12 }}>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>Buku</span>
+                                    <strong style={{ color: 'var(--text-primary)' }}>{selectedBorrowing.book_title}</strong>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Oleh: {selectedBorrowing.book_author || '-'}</div>
+                                </div>
+                                <div style={{ marginBottom: 12 }}>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>Status & Tanggal</span>
+                                    <span style={{
+                                        display: 'inline-block', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600,
+                                        background: statusConfig[selectedBorrowing.status]?.bg, color: statusConfig[selectedBorrowing.status]?.color,
+                                        marginBottom: 4
+                                    }}>
+                                        {statusConfig[selectedBorrowing.status]?.label}
+                                    </span>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Diajukan: {formatDate(selectedBorrowing.request_date)}</div>
+                                </div>
+                                {selectedBorrowing.notes && (
+                                    <div>
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>Catatan / Keperluan</span>
+                                        <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>"{selectedBorrowing.notes}"</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ marginBottom: 20 }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Aksi Status</span>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                    {selectedBorrowing.status === 'pending' && (
+                                        <>
+                                            <button onClick={() => handleAction(selectedBorrowing.id, 'approved')} className="btn-primary" style={{ flex: 1, padding: '10px', borderRadius: 8, minWidth: 100 }}>
+                                                Setujui
+                                            </button>
+                                            <button onClick={() => handleAction(selectedBorrowing.id, 'rejected')} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', fontWeight: 600, cursor: 'pointer', minWidth: 100 }}>
+                                                Tolak
+                                            </button>
+                                        </>
+                                    )}
+                                    {selectedBorrowing.status === 'approved' && (
+                                        <button onClick={() => handleAction(selectedBorrowing.id, 'borrowed')} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+                                            Tandai Dipinjam (Buku Diambil)
+                                        </button>
+                                    )}
+                                    {selectedBorrowing.status === 'borrowed' && (
+                                        <button onClick={() => handleAction(selectedBorrowing.id, 'returned')} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: 'none', fontWeight: 600, cursor: 'pointer' }}>
+                                            Tandai Dikembalikan
+                                        </button>
+                                    )}
+                                    {['returned', 'rejected'].includes(selectedBorrowing.status) && (
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Tidak ada aksi status tersedia.</div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Chat dengan Pengguna</span>
+                                <textarea
+                                    value={chatMessage}
+                                    onChange={e => setChatMessage(e.target.value)}
+                                    rows={3}
+                                    placeholder="Tulis pesan..."
+                                    style={{
+                                        width: '100%', padding: '12px', borderRadius: 12, border: '1px solid var(--glass-border)',
+                                        background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)',
+                                        fontFamily: 'inherit', resize: 'vertical', marginBottom: 12
+                                    }}
+                                />
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button onClick={handleSendChat} disabled={!chatMessage.trim() || sendingChat} className="btn-primary" style={{
+                                        padding: '10px 16px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center',
+                                        opacity: (!chatMessage.trim() || sendingChat) ? 0.6 : 1, cursor: (!chatMessage.trim() || sendingChat) ? 'not-allowed' : 'pointer', border: 'none'
+                                    }}>
+                                        <Send size={16} /> {sendingChat ? 'Mengirim...' : 'Kirim Pesan'}
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                )}
             </div>
         </AuthGuard>
     );
