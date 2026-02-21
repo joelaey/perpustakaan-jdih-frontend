@@ -1534,15 +1534,15 @@ img {
     content: '';
     position: absolute;
     inset: 0;
-    /* Red-tinted overlay for about page */
-    background: linear-gradient(135deg, rgba(26, 26, 26, 0.85) 0%, rgba(45, 20, 32, 0.9) 40%, rgba(61, 26, 42, 0.9) 60%, rgba(26, 26, 26, 0.85) 100%);
-    opacity: 1;
+    background: var(--background);
+    opacity: 0.85;
     z-index: 0;
     pointer-events: none;
 }
 
-[data-theme="light"] .tentang-hero::before {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(250, 240, 242, 0.9) 40%, rgba(245, 235, 238, 0.9) 60%, rgba(255, 255, 255, 0.85) 100%);
+[data-theme="dark"] .tentang-hero::before {
+    background: linear-gradient(180deg, rgba(17, 17, 17, 0.8) 0%, rgba(17, 17, 17, 0.95) 100%);
+    opacity: 1;
 }
 
 .tentang-hero-content {
