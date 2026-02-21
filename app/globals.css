@@ -1541,17 +1541,17 @@ img {
 .tentang-hero h1 {
     font-size: clamp(2rem, 4.5vw, 3.25rem);
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-primary);
     margin-bottom: 20px;
 }
 
 .tentang-hero h1 .accent {
-    color: var(--red-light);
+    color: var(--accent);
 }
 
 .tentang-hero p {
-    font-size: 1.0625rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.125rem;
+    color: var(--text-secondary);
     line-height: 1.8;
     max-width: 560px;
     margin: 0 auto;

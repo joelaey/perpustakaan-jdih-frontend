@@ -12,13 +12,12 @@ export default function TentangPage() {
 
             {/* Hero Section */}
             <section className="tentang-hero animate-in">
-                <div className="tentang-hero-overlay" />
                 <div className="tentang-hero-content">
                     <div className="tentang-logos">
                         <Image src="/logo-awal-jdihn-small.png" alt="JDIH" width={72} height={72} />
                         <Image src="/lambang-sumedang.png" alt="Kabupaten Sumedang" width={72} height={72} />
                     </div>
-                    <span className="section-label" style={{ color: 'rgba(255,255,255,0.8)' }}>Tentang Kami</span>
+                    <span className="section-label">Tentang Kami</span>
                     <h1>
                         Perpustakaan JDIH<br />
                         <span className="accent">Kabupaten Sumedang</span>
