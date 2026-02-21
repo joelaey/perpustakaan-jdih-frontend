@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { booksAPI } from '@/lib/api';
+import { booksAPI, borrowingsAPI } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, Download, Calendar, User, Building, Tag, FileText, ArrowLeft, Bookmark } from 'lucide-react';
+import { BookOpen, Download, Calendar, User, Building, Tag, FileText, ArrowLeft, Bookmark, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { Book, BookCard } from '@/components/BookCard';
 
 export default function BookDetailPage() {
@@ -18,6 +18,11 @@ export default function BookDetailPage() {
     const [related, setRelated] = useState<Book[]>([]);
     const [loading, setLoading] = useState(true);
     const [mainImgError, setMainImgError] = useState(false);
+    const [borrowModalOpen, setBorrowModalOpen] = useState(false);
+    const [borrowNotes, setBorrowNotes] = useState('');
+    const [borrowStatus, setBorrowStatus] = useState<{ loading: boolean; error: string | null; success: string | null }>({
+        loading: false, error: null, success: null
+    });
 
     useEffect(() => {
         if (!params.id) return;
@@ -89,8 +94,21 @@ export default function BookDetailPage() {
         if (typeof actionValue === 'string') {
             window.open(actionValue, '_blank');
         } else {
-            actionValue(); // Example borrowing logic action here
-            alert("Fitur peminjaman sedang dalam pengembangan.");
+            actionValue();
+        }
+    };
+
+    const handleBorrowSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!book) return;
+        setBorrowStatus({ loading: true, error: null, success: null });
+        try {
+            await borrowingsAPI.request(book.id, borrowNotes);
+            setBorrowStatus({ loading: false, error: null, success: 'Permintaan peminjaman berhasil dikirim. Menunggu persetujuan admin.' });
+            setBorrowNotes('');
+            setTimeout(() => setBorrowModalOpen(false), 2500);
+        } catch (err: any) {
+            setBorrowStatus({ loading: false, error: err.response?.data?.message || 'Gagal mengajukan peminjaman', success: null });
         }
     };
 
@@ -148,7 +166,10 @@ export default function BookDetailPage() {
 
                         <div style={{ display: 'flex', gap: 16, marginTop: 32, flexWrap: 'wrap' }}>
                             <button
-                                onClick={() => handleAction(() => { })}
+                                onClick={() => handleAction(() => {
+                                    setBorrowStatus({ loading: false, error: null, success: null });
+                                    setBorrowModalOpen(true);
+                                })}
                                 className="btn btn-primary btn-lg"
                                 style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                             >
@@ -195,6 +216,67 @@ export default function BookDetailPage() {
             <footer className="site-footer">
                 © 2026 Perpustakaan JDIH Kabupaten Sumedang
             </footer>
+            {/* Borrow Modal */}
+            {borrowModalOpen && book && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem',
+                }} onClick={() => setBorrowModalOpen(false)}>
+                    <div onClick={e => e.stopPropagation()} style={{
+                        background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
+                        borderRadius: 20, padding: '2rem', width: '100%', maxWidth: 440,
+                        animation: 'fadeSlideDown 0.2s ease', position: 'relative'
+                    }}>
+                        <button onClick={() => setBorrowModalOpen(false)} style={{
+                            position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer'
+                        }}><X size={20} /></button>
+
+                        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+                            Pinjam Buku
+                        </h2>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                            Anda akan meminjam: <strong style={{ color: 'var(--text-primary)' }}>{book.title}</strong>
+                        </p>
+
+                        {borrowStatus.error && (
+                            <div style={{ padding: '12px 16px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: 12, marginBottom: 16, display: 'flex', gap: 8, fontSize: '0.9rem', alignItems: 'center' }}>
+                                <AlertCircle size={18} /> {borrowStatus.error}
+                            </div>
+                        )}
+
+                        {borrowStatus.success && (
+                            <div style={{ padding: '12px 16px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderRadius: 12, marginBottom: 16, display: 'flex', gap: 8, fontSize: '0.9rem', alignItems: 'center' }}>
+                                <CheckCircle size={18} /> {borrowStatus.success}
+                            </div>
+                        )}
+
+                        {!borrowStatus.success && (
+                            <form onSubmit={handleBorrowSubmit}>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                                        Catatan / Keperluan (Opsional)
+                                    </label>
+                                    <textarea
+                                        value={borrowNotes}
+                                        onChange={e => setBorrowNotes(e.target.value)}
+                                        placeholder="Misal: Untuk keperluan riset skripsi..."
+                                        style={{
+                                            width: '100%', padding: '12px', borderRadius: 12, border: '1px solid var(--glass-border)',
+                                            background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', minHeight: 100,
+                                            fontFamily: 'inherit', resize: 'vertical'
+                                        }}
+                                    />
+                                </div>
+                                <button type="submit" disabled={borrowStatus.loading} className="btn-primary" style={{
+                                    width: '100%', padding: '12px', border: 'none', borderRadius: 12, fontWeight: 600, fontSize: '1rem', cursor: borrowStatus.loading ? 'not-allowed' : 'pointer', opacity: borrowStatus.loading ? 0.7 : 1
+                                }}>
+                                    {borrowStatus.loading ? 'Memproses...' : 'Ajukan Peminjaman'}
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
