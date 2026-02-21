@@ -54,6 +54,7 @@ export interface BookQueryParams {
     search?: string;
     field_type?: string;
     year?: string;
+    sort?: string;
 }
 
 export const booksAPI = {

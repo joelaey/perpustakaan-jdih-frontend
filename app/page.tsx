@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import { ArrowRight, BookOpen } from 'lucide-react';
+import { booksAPI } from '@/lib/api';
+import { Book, BookCard } from '@/components/BookCard';
 
 export default function HomePage() {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
@@ -24,17 +26,22 @@ export default function HomePage() {
     }
   }, []);
 
+  const [recentBooks, setRecentBooks] = useState<Book[]>([]);
+  const [loadingBooks, setLoadingBooks] = useState(true);
+
+  useEffect(() => {
+    setLoadingBooks(true);
+    booksAPI.getAll({ limit: 5, sort: 'newest' })
+      .then(res => setRecentBooks(res.data.data || []))
+      .catch(() => setRecentBooks([]))
+      .finally(() => setLoadingBooks(false));
+  }, []);
+
   if (isLoading) {
     return <div className="loading-screen"><div className="spinner" /></div>;
   }
 
-  const featuredBooks = [
-    { title: 'Perda No. 1 Tahun 2024 tentang RPJMD', author: 'DPRD Kab. Sumedang', type: 'Perda' },
-    { title: 'Perbup No. 15 Tahun 2023 tentang OPD', author: 'Bupati Sumedang', type: 'Perbup' },
-    { title: 'SK Bupati No. 22 Tahun 2024', author: 'Bupati Sumedang', type: 'SK' },
-    { title: 'Perda No. 3 Tahun 2023 tentang APBD', author: 'DPRD Kab. Sumedang', type: 'Perda' },
-    { title: 'Instruksi Bupati No. 5 Tahun 2024', author: 'Bupati Sumedang', type: 'Instruksi' },
-  ];
+
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -77,19 +84,26 @@ export default function HomePage() {
           <span className="section-label">Koleksi Terbaru</span>
         </div>
         <div className="featured-row">
-          {featuredBooks.map((book, i) => (
-            <Link href="/books" key={i} className={`book-card animate-in-delay-${Math.min(i, 3)}`}>
-              <div className="book-cover">
-                <div className="no-cover">
-                  <BookOpen size={40} />
+          {loadingBooks ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className={`book-card animate-in-delay-${Math.min(i, 3)}`}>
+                <div className="skeleton" style={{ aspectRatio: '2/3', width: '100%' }} />
+                <div style={{ paddingTop: 14 }}>
+                  <div className="skeleton" style={{ height: 14, marginBottom: 6 }} />
+                  <div className="skeleton" style={{ height: 12, width: '60%' }} />
                 </div>
               </div>
-              <div className="book-info">
-                <div className="book-title">{book.title}</div>
-                <div className="book-author">{book.author}</div>
-              </div>
-            </Link>
-          ))}
+            ))
+          ) : recentBooks.length > 0 ? (
+            recentBooks.map((book: Book, i: number) => (
+              <BookCard key={book.id} book={book} delay={Math.min(i, 3)} />
+            ))
+          ) : (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <BookOpen size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
+              <p>Belum ada buku terbaru</p>
+            </div>
+          )}
         </div>
       </section>
 

@@ -1,24 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { booksAPI } from '@/lib/api';
-import { BookOpen, Download, Calendar, User, Building, Tag, FileText, ArrowLeft } from 'lucide-react';
-
-interface Book {
-    id: number; title: string; author: string; publisher: string;
-    year: number; field_type: string; cover: string; subject: string;
-    description: string; isbn: string; language: string;
-    page_count: number; file_url: string;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { BookOpen, Download, Calendar, User, Building, Tag, FileText, ArrowLeft, Bookmark } from 'lucide-react';
+import { Book, BookCard } from '@/components/BookCard';
 
 export default function BookDetailPage() {
     const params = useParams();
+    const router = useRouter();
+    const { isAuthenticated } = useAuth();
+
     const [book, setBook] = useState<Book | null>(null);
     const [related, setRelated] = useState<Book[]>([]);
     const [loading, setLoading] = useState(true);
+    const [mainImgError, setMainImgError] = useState(false);
 
     useEffect(() => {
         if (!params.id) return;
@@ -81,6 +80,26 @@ export default function BookDetailPage() {
         { icon: FileText, label: 'Halaman', value: book.page_count ? `${book.page_count} halaman` : null },
     ].filter(m => m.value);
 
+    const handleAction = (actionValue: string | (() => void)) => {
+        if (!isAuthenticated) {
+            router.push('/login');
+            return;
+        }
+
+        if (typeof actionValue === 'string') {
+            window.open(actionValue, '_blank');
+        } else {
+            actionValue(); // Example borrowing logic action here
+            alert("Fitur peminjaman sedang dalam pengembangan.");
+        }
+    };
+
+    const mainCoverUrl = book.cover?.startsWith('http')
+        ? book.cover
+        : book.cover
+            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
+            : '';
+
     return (
         <div style={{ minHeight: '100vh' }}>
             <Navbar />
@@ -94,10 +113,12 @@ export default function BookDetailPage() {
                 {/* Book Detail */}
                 <div className="book-detail animate-in">
                     <div className="book-detail-cover">
-                        {book.cover ? (
-                            <img src={book.cover} alt={book.title} />
+                        {mainCoverUrl && !mainImgError ? (
+                            <img src={mainCoverUrl} alt={book.title} onError={() => setMainImgError(true)} />
                         ) : (
-                            <BookOpen size={64} style={{ color: 'var(--text-muted)' }} />
+                            <div className="no-cover" style={{ width: '100%', height: '100%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <BookOpen size={64} style={{ color: 'var(--text-muted)' }} />
+                            </div>
                         )}
                     </div>
 
@@ -119,17 +140,25 @@ export default function BookDetailPage() {
                             </div>
                         ))}
 
-                        {book.file_url && (
-                            <a
-                                href={book.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                        <div style={{ display: 'flex', gap: 16, marginTop: 32, flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => handleAction(() => { })}
                                 className="btn btn-primary btn-lg"
-                                style={{ marginTop: 32 }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                             >
-                                <Download size={18} /> Download PDF
-                            </a>
-                        )}
+                                <Bookmark size={18} /> Pinjam Buku
+                            </button>
+
+                            {book.file_url && (
+                                <button
+                                    onClick={() => handleAction(book.file_url!)}
+                                    className="btn btn-outline btn-lg"
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                                >
+                                    <Download size={18} /> Download PDF
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -141,19 +170,7 @@ export default function BookDetailPage() {
 
                         <div className="book-grid" style={{ marginTop: 32 }}>
                             {related.map((r) => (
-                                <Link href={`/books/${r.id}`} key={r.id} className="book-card">
-                                    <div className="book-cover">
-                                        {r.cover ? (
-                                            <img src={r.cover} alt={r.title} loading="lazy" />
-                                        ) : (
-                                            <div className="no-cover"><BookOpen size={32} /></div>
-                                        )}
-                                    </div>
-                                    <div className="book-info">
-                                        <div className="book-title">{r.title}</div>
-                                        <div className="book-author">{r.author || 'Penulis tidak diketahui'}</div>
-                                    </div>
-                                </Link>
+                                <BookCard key={r.id} book={r} />
                             ))}
                         </div>
                     </div>
