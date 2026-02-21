@@ -115,7 +115,7 @@ function BooksContent() {
                     >
                         Semua
                     </button>
-                    {fieldTypes.slice(0, 8).map((ft) => (
+                    {fieldTypes.map((ft) => (
                         <button
                             key={ft}
                             className={`filter-tab ${fieldType === ft ? 'active' : ''}`}

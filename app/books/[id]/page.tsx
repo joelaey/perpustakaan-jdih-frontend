@@ -155,13 +155,22 @@ export default function BookDetailPage() {
                                 <Bookmark size={18} /> Pinjam Buku
                             </button>
 
-                            {pdfUrl && (
+                            {pdfUrl ? (
                                 <button
                                     onClick={() => handleAction(pdfUrl)}
                                     className="btn btn-outline btn-lg"
                                     style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                                 >
                                     <Download size={18} /> Download PDF
+                                </button>
+                            ) : (
+                                <button
+                                    disabled
+                                    className="btn btn-outline btn-lg"
+                                    style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: 0.5, cursor: 'not-allowed' }}
+                                    title="File PDF tidak tersedia untuk buku ini"
+                                >
+                                    <Download size={18} /> PDF Tidak Tersedia
                                 </button>
                             )}
                         </div>
