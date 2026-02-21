@@ -42,25 +42,27 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="hero animate-in">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
-          <Image src="/logo-app.png" alt="JDIH" width={64} height={64} />
-          <Image src="/lambang-sumedang.png" alt="Kabupaten Sumedang" width={64} height={64} />
-        </div>
-        <h1>
-          Perpustakaan Digital<br />
-          <span className="accent">JDIH Kab. Sumedang</span>
-        </h1>
-        <p>
-          Akses koleksi dokumen hukum dari Perpustakaan JDIH Kabupaten Sumedang.
-          Jelajahi Perda, Perbup, SK, dan produk hukum lainnya secara digital.
-        </p>
-        <div className="hero-actions">
-          <Link href="/books" className="btn btn-primary btn-lg">
-            Jelajahi Katalog <ArrowRight size={18} />
-          </Link>
-          <Link href="/register" className="btn btn-outline btn-lg">
-            Daftar Sekarang
-          </Link>
+        <div className="hero-content">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
+            <Image src="/logo-app.png" alt="JDIH" width={64} height={64} />
+            <Image src="/lambang-sumedang.png" alt="Kabupaten Sumedang" width={64} height={64} />
+          </div>
+          <h1>
+            Perpustakaan Digital<br />
+            <span className="accent">JDIH Kab. Sumedang</span>
+          </h1>
+          <p>
+            Akses koleksi dokumen hukum dari Perpustakaan JDIH Kabupaten Sumedang.
+            Jelajahi Perda, Perbup, SK, dan produk hukum lainnya secara digital.
+          </p>
+          <div className="hero-actions">
+            <Link href="/books" className="btn btn-primary btn-lg">
+              Jelajahi Katalog <ArrowRight size={18} />
+            </Link>
+            <Link href="/register" className="btn btn-outline btn-lg">
+              Daftar Sekarang
+            </Link>
+          </div>
         </div>
       </section>
 
