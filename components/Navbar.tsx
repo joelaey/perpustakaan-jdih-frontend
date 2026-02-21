@@ -201,7 +201,6 @@ export default function Navbar() {
                 {!isAuthenticated && (
                     <>
                         <Link href="/login">Masuk</Link>
-                        <Link href="/register">Daftar</Link>
                     </>
                 )}
                 {isAuthenticated && (
