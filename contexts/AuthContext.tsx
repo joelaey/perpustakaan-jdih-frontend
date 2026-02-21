@@ -8,6 +8,7 @@ interface User {
     name: string;
     email: string;
     role: 'admin' | 'pengguna';
+    avatar?: string | null;
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<void>;
     register: (name: string, email: string, password: string) => Promise<void>;
     logout: () => void;
+    updateUser: (user: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,6 +74,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('jdih_user');
     }, []);
 
+    const updateUserContext = useCallback((updates: Partial<User>) => {
+        setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, ...updates };
+            localStorage.setItem('jdih_user', JSON.stringify(updated));
+            return updated;
+        });
+    }, []);
+
     const value: AuthContextType = {
         user,
         token,
@@ -81,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        updateUser: updateUserContext,
     };
 
     return (

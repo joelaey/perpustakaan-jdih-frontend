@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { usersAPI } from '@/lib/api';
-import { User as UserIcon, Mail, Shield, Save, Lock, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { User as UserIcon, Mail, Shield, Save, Lock, CheckCircle, AlertCircle, Eye, EyeOff, Camera } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AdminProfilePage() {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
     const [profileForm, setProfileForm] = useState({ name: user?.name || '', email: user?.email || '' });
     const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -16,14 +17,43 @@ export default function AdminProfilePage() {
     const [showNew, setShowNew] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
+
+    useEffect(() => {
+        if (user) {
+            setProfileForm({ name: user.name, email: user.email });
+            setAvatarPreview(user.avatar || null);
+        }
+    }, [user]);
+
+    const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            setMessage({ type: 'error', text: 'Format file tidak didukung. Pilih gambar.' });
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            setMessage({ type: 'error', text: 'Ukuran file maksimal 2MB' });
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            setAvatarPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
 
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setMessage(null);
         try {
-            await usersAPI.updateProfile(profileForm);
-            setMessage({ type: 'success', text: 'Profil berhasil diperbarui. Silakan login ulang untuk melihat perubahan.' });
+            await usersAPI.updateProfile({ ...profileForm, avatar: avatarPreview || undefined });
+            updateUser({ ...profileForm, avatar: avatarPreview });
+            setMessage({ type: 'success', text: 'Profil berhasil diperbarui. Halaman akan dimuat ulang.' });
+            setTimeout(() => window.location.reload(), 1500);
         } catch {
             setMessage({ type: 'error', text: 'Gagal memperbarui profil' });
         } finally {
@@ -75,19 +105,32 @@ export default function AdminProfilePage() {
                         border: '1px solid var(--glass-border)', borderRadius: 20, padding: '2rem',
                     }}>
                         <div style={{
-                            width: 80, height: 80, borderRadius: '50%', margin: '0 auto 1rem',
-                            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                            width: 100, height: 100, borderRadius: '50%', margin: '0 auto 1rem',
+                            background: 'var(--accent)', position: 'relative', cursor: 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        }}>
-                            <UserIcon size={36} color="#fff" />
+                            overflow: 'hidden', border: '3px solid var(--glass-border)'
+                        }} onClick={() => fileInputRef.current?.click()}>
+                            {avatarPreview ? (
+                                <Image src={avatarPreview} alt="Profile" fill style={{ objectFit: 'cover' }} />
+                            ) : (
+                                <UserIcon size={46} color="#fff" />
+                            )}
+                            <div style={{
+                                position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                opacity: 0, transition: 'opacity 0.2s',
+                            }} className="avatar-overlay">
+                                <Camera color="#fff" size={24} />
+                            </div>
                         </div>
+                        <input type="file" ref={fileInputRef} onChange={handleImageFile} accept="image/*" style={{ display: 'none' }} />
                         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>{user?.name}</h1>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 4 }}>{user?.email}</p>
                         <span style={{
                             display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10,
                             padding: '4px 14px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 500,
-                            background: user?.role === 'admin' ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
-                            color: user?.role === 'admin' ? '#ef4444' : '#3b82f6',
+                            background: user?.role === 'admin' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                            color: user?.role === 'admin' ? 'var(--accent)' : 'var(--text-secondary)',
                         }}>
                             <Shield size={13} /> {user?.role === 'admin' ? 'Administrator' : 'Pengguna'}
                         </span>
@@ -103,7 +146,7 @@ export default function AdminProfilePage() {
                                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                 padding: '0.75rem', borderRadius: 12, border: 'none', cursor: 'pointer',
                                 fontWeight: 500, fontSize: '0.9rem', transition: 'all 0.2s',
-                                background: activeTab === tab.key ? 'linear-gradient(135deg, var(--primary), var(--secondary))' : 'rgba(255,255,255,0.05)',
+                                background: activeTab === tab.key ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
                                 color: activeTab === tab.key ? '#fff' : 'var(--text-secondary)',
                             }}>
                                 <tab.icon size={16} /> {tab.label}
@@ -139,10 +182,9 @@ export default function AdminProfilePage() {
                                 <label style={labelStyle}><Mail size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />Email</label>
                                 <input type="email" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} required style={inputStyle} />
                             </div>
-                            <button type="submit" disabled={loading} style={{
+                            <button type="submit" className="btn-primary" disabled={loading} style={{
                                 width: '100%', padding: '0.9rem', borderRadius: 14, border: 'none',
-                                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                color: '#fff', cursor: loading ? 'not-allowed' : 'pointer',
+                                cursor: loading ? 'not-allowed' : 'pointer',
                                 fontWeight: 600, fontSize: '1rem', display: 'flex', alignItems: 'center',
                                 justifyContent: 'center', gap: 8, opacity: loading ? 0.6 : 1,
                             }}>
@@ -187,10 +229,9 @@ export default function AdminProfilePage() {
                                     onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                                     required minLength={6} style={inputStyle} />
                             </div>
-                            <button type="submit" disabled={loading} style={{
+                            <button type="submit" className="btn-primary" disabled={loading} style={{
                                 width: '100%', padding: '0.9rem', borderRadius: 14, border: 'none',
-                                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                color: '#fff', cursor: loading ? 'not-allowed' : 'pointer',
+                                cursor: loading ? 'not-allowed' : 'pointer',
                                 fontWeight: 600, fontSize: '1rem', display: 'flex', alignItems: 'center',
                                 justifyContent: 'center', gap: 8, opacity: loading ? 0.6 : 1,
                             }}>
@@ -201,7 +242,8 @@ export default function AdminProfilePage() {
                 </main>
             </div>
             <style jsx>{`
-                input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+                input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
+                .avatar-overlay:hover { opacity: 1 !important; }
             `}</style>
         </AuthGuard>
     );

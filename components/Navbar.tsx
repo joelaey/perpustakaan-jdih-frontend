@@ -135,7 +135,16 @@ export default function Navbar() {
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                <UserIcon size={16} />
+                                {user?.avatar ? (
+                                    <div style={{
+                                        width: 24, height: 24, borderRadius: '50%', overflow: 'hidden',
+                                        position: 'relative', border: '1px solid var(--glass-border)'
+                                    }}>
+                                        <Image src={user.avatar} alt="Avatar" fill style={{ objectFit: 'cover' }} />
+                                    </div>
+                                ) : (
+                                    <UserIcon size={16} />
+                                )}
                                 <span>{user?.name?.split(' ')[0]}</span>
                                 <ChevronDown size={14} style={{
                                     transform: profileOpen ? 'rotate(180deg)' : 'rotate(0)',

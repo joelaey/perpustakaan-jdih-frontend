@@ -84,7 +84,7 @@ export const usersAPI = {
         api.post('/users', data),
     update: (id: number, data: Record<string, unknown>) => api.put(`/users/${id}`, data),
     delete: (id: number) => api.delete(`/users/${id}`),
-    updateProfile: (data: { name?: string; email?: string }) =>
+    updateProfile: (data: { name?: string; email?: string; avatar?: string }) =>
         api.put('/users/profile', data),
     changePassword: (currentPassword: string, newPassword: string) =>
         api.put('/users/change-password', { currentPassword, newPassword }),
