@@ -207,24 +207,24 @@ export default function Navbar() {
                 {isAuthenticated && (
                     <>
                         <Link href="/admin/profile">Profil Saya</Link>
-                        <button onClick={logout} style={{ textAlign: 'left', background: 'none', border: 'none', font: 'inherit', color: '#ef4444', padding: '10px 0', cursor: 'pointer' }}>
+                        <button onClick={logout} className="mobile-logout">
                             Keluar
                         </button>
                     </>
                 )}
-                <div style={{ paddingTop: 12, display: 'flex', gap: 4 }}>
+                <div className="mobile-theme-row">
                     {themeButtons.map(({ value, icon: Icon }) => (
                         <button
                             key={value}
                             onClick={() => setTheme(value)}
                             className={theme === value ? 'active' : ''}
                             style={{
-                                width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                border: '1px solid var(--border)', borderRadius: 4, background: theme === value ? 'var(--accent-bg)' : 'transparent',
-                                color: theme === value ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer',
+                                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                border: '1px solid var(--glass-border)', borderRadius: 8, background: theme === value ? 'var(--accent-bg)' : 'transparent',
+                                color: theme === value ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', padding: 0
                             }}
                         >
-                            <Icon size={14} />
+                            <Icon size={16} />
                         </button>
                     ))}
                 </div>
