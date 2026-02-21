@@ -1325,7 +1325,7 @@ img {
 
 @media (max-width: 768px) {
     .quick-actions {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
 
