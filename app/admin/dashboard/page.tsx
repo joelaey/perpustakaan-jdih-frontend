@@ -16,7 +16,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         booksAPI.getStats()
-            .then(res => setBookCount(res.data.total || 0))
+            .then(res => setBookCount(res.data.data?.total_books || 0))
             .catch(() => { });
         usersAPI.getAll()
             .then(res => setUserCount(res.data.data?.length || 0))
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
 
                     {/* Section Divider */}
                     <div style={{ marginBottom: 32 }}>
-                        <span className="section-label">Aksi Cepat</span>
+                        <span className="section-label">Aksi</span>
                         <div className="section-divider" style={{ marginTop: 8 }} />
                     </div>
 

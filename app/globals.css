@@ -1323,6 +1323,36 @@ img {
     line-height: 1.5;
 }
 
+@media (max-width: 768px) {
+    .quick-actions {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+    }
+
+    .quick-action-card {
+        padding: 16px;
+        gap: 8px;
+    }
+
+    .quick-action-card .icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .quick-action-card .icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .quick-action-card h3 {
+        font-size: 0.875rem;
+    }
+
+    .quick-action-card p {
+        font-size: 0.75rem;
+    }
+}
+
 /* --- Table --- */
 .table-container {
     overflow-x: auto;

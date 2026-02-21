@@ -65,11 +65,7 @@ export default function Navbar() {
     const isAdminRoute = pathname.startsWith('/admin') || pathname === '/dashboard';
     const leftLinks = isAuthenticated && isAdmin && isAdminRoute
         ? [
-            { href: '/admin/dashboard', label: 'Dashboard' },
-            { href: '/admin/books', label: 'Kelola Buku' },
-            { href: '/admin/peminjaman', label: 'Peminjaman' },
-            { href: '/admin/users', label: 'Users' },
-            { href: '/chat', label: 'Chat' },
+            { href: '/admin/dashboard', label: 'Panel Admin' },
         ]
         : isAuthenticated
             ? [
