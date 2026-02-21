@@ -55,7 +55,7 @@ function BooksContent() {
     const fetchBooks = useCallback(async () => {
         setLoading(true);
         try {
-            const params: BookQueryParams = { page, limit: 15 };
+            const params: BookQueryParams = { page, limit: 15, sort };
             if (search) params.search = search;
             if (fieldType) params.field_type = fieldType;
             const res = await booksAPI.getAll(params);
@@ -66,7 +66,7 @@ function BooksContent() {
         } finally {
             setLoading(false);
         }
-    }, [page, search, fieldType]);
+    }, [page, search, fieldType, sort]);
 
     useEffect(() => { fetchBooks(); }, [fetchBooks]);
 

@@ -100,6 +100,12 @@ export default function BookDetailPage() {
             ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
             : '';
 
+    const pdfUrl = book.file_url?.startsWith('http')
+        ? book.file_url
+        : book.file_url
+            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.file_url.startsWith('/') ? '' : '/'}${book.file_url}`
+            : '';
+
     return (
         <div style={{ minHeight: '100vh' }}>
             <Navbar />
@@ -149,9 +155,9 @@ export default function BookDetailPage() {
                                 <Bookmark size={18} /> Pinjam Buku
                             </button>
 
-                            {book.file_url && (
+                            {pdfUrl && (
                                 <button
-                                    onClick={() => handleAction(book.file_url!)}
+                                    onClick={() => handleAction(pdfUrl)}
                                     className="btn btn-outline btn-lg"
                                     style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                                 >
