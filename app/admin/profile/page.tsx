@@ -11,7 +11,7 @@ import Image from 'next/image';
 export default function AdminProfilePage() {
     const { user, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
-    const [profileForm, setProfileForm] = useState({ name: user?.name || '', email: user?.email || '' });
+    const [profileForm, setProfileForm] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone_number || '' });
     const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
@@ -19,10 +19,13 @@ export default function AdminProfilePage() {
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
+    const [showOTP, setShowOTP] = useState(false);
+    const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
+    const [otpSent, setOtpSent] = useState(false);
 
     useEffect(() => {
         if (user) {
-            setProfileForm({ name: user.name, email: user.email });
+            setProfileForm({ name: user.name, email: user.email, phone: user.phone_number || '' });
             setAvatarPreview(user.avatar || null);
         }
     }, [user]);
@@ -45,18 +48,51 @@ export default function AdminProfilePage() {
         reader.readAsDataURL(file);
     };
 
-    const handleProfileSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setMessage(null);
+    const submitFinalProfile = async () => {
         try {
-            await usersAPI.updateProfile({ ...profileForm, avatar: avatarPreview || undefined });
-            updateUser({ ...profileForm, avatar: avatarPreview });
+            await usersAPI.updateProfile({ name: profileForm.name, email: profileForm.email, phone_number: profileForm.phone || undefined, avatar: avatarPreview || undefined });
+            updateUser({ name: profileForm.name, email: profileForm.email, phone_number: profileForm.phone || undefined, avatar: avatarPreview });
             setMessage({ type: 'success', text: 'Profil berhasil diperbarui. Halaman akan dimuat ulang.' });
             setTimeout(() => window.location.reload(), 1500);
         } catch {
             setMessage({ type: 'error', text: 'Gagal memperbarui profil' });
         } finally {
+            setLoading(false);
+            setShowOTP(false);
+        }
+    };
+
+    const handleProfileSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage(null);
+
+        const hasEmailOrPhoneChanged = profileForm.email !== user?.email || profileForm.phone !== (user?.phone_number || '');
+
+        if (hasEmailOrPhoneChanged) {
+            // Simulate sending OTP
+            setShowOTP(true);
+            setOtpSent(true);
+            setLoading(false);
+        } else {
+            // Submit directly if contact details haven't changed
+            await submitFinalProfile();
+        }
+    };
+
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const code = otpCode.join('');
+        if (code.length !== 6) {
+            setMessage({ type: 'error', text: 'Kode OTP harus 6 digit' });
+            return;
+        }
+        setLoading(true);
+        // Simulate OTP verification (in a real app, call an API)
+        if (code === '123456') {
+            await submitFinalProfile();
+        } else {
+            setMessage({ type: 'error', text: 'Kode OTP tidak valid' });
             setLoading(false);
         }
     };
@@ -70,6 +106,12 @@ export default function AdminProfilePage() {
             setLoading(false);
             return;
         }
+
+        // Password validation validation
+        if (passwordForm.newPassword.length < 8) { setMessage({ type: 'error', text: 'Password minimal 8 karakter' }); setLoading(false); return; }
+        if (!/[A-Z]/.test(passwordForm.newPassword)) { setMessage({ type: 'error', text: 'Password harus mengandung huruf besar' }); setLoading(false); return; }
+        if (!/[a-z]/.test(passwordForm.newPassword)) { setMessage({ type: 'error', text: 'Password harus mengandung huruf kecil' }); setLoading(false); return; }
+        if (!/[0-9]/.test(passwordForm.newPassword)) { setMessage({ type: 'error', text: 'Password harus mengandung angka' }); setLoading(false); return; }
         try {
             await usersAPI.changePassword(passwordForm.currentPassword, passwordForm.newPassword);
             setMessage({ type: 'success', text: 'Password berhasil diubah' });
@@ -144,9 +186,9 @@ export default function AdminProfilePage() {
                         ].map(tab => (
                             <button key={tab.key} onClick={() => { setActiveTab(tab.key); setMessage(null); }} style={{
                                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                padding: '0.75rem', borderRadius: 12, border: 'none', cursor: 'pointer',
-                                fontWeight: 500, fontSize: '0.9rem', transition: 'all 0.2s',
-                                background: activeTab === tab.key ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                                padding: '0.75rem', borderRadius: 12, border: activeTab === tab.key ? '1px solid transparent' : '1px solid var(--border)',
+                                cursor: 'pointer', fontWeight: 500, fontSize: '0.9rem', transition: 'all 0.2s',
+                                background: activeTab === tab.key ? 'var(--accent)' : 'var(--surface)',
                                 color: activeTab === tab.key ? '#fff' : 'var(--text-secondary)',
                             }}>
                                 <tab.icon size={16} /> {tab.label}
@@ -182,6 +224,16 @@ export default function AdminProfilePage() {
                                 <label style={labelStyle}><Mail size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />Email</label>
                                 <input type="email" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} required style={inputStyle} />
                             </div>
+                            <div style={{ marginBottom: '1.25rem' }}>
+                                <label style={labelStyle}>Nomor Telepon</label>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <span style={{
+                                        padding: '0.75rem 1rem', border: '1px solid var(--glass-border)',
+                                        background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)', borderRadius: 12,
+                                    }}>+62</span>
+                                    <input type="tel" value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value.replace(/\D/g, '') })} style={{ ...inputStyle, flex: 1 }} placeholder="81234567890" />
+                                </div>
+                            </div>
                             <button type="submit" className="btn-primary" disabled={loading} style={{
                                 width: '100%', padding: '0.9rem', borderRadius: 14, border: 'none',
                                 cursor: loading ? 'not-allowed' : 'pointer',
@@ -191,6 +243,48 @@ export default function AdminProfilePage() {
                                 <Save size={18} /> {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
                             </button>
                         </form>
+                    )}
+
+                    {/* OTP Form Overlay */}
+                    {activeTab === 'profile' && showOTP && (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)' }}>
+                            <div style={{ background: 'var(--surface)', padding: '2rem', borderRadius: 24, width: '100%', maxWidth: 400, border: '1px solid var(--glass-border)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>Verifikasi Kontak Baru</h3>
+                                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', textAlign: 'center' }}>Masukkan kode OTP (Gunakan 123456 untuk Demo)</p>
+
+                                <form onSubmit={handleVerifyOtp}>
+                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: '1.5rem' }}>
+                                        {otpCode.map((digit, idx) => (
+                                            <input
+                                                key={idx}
+                                                id={`otp-${idx}`}
+                                                type="text"
+                                                maxLength={1}
+                                                value={digit}
+                                                onChange={(e) => {
+                                                    const newOtp = [...otpCode];
+                                                    newOtp[idx] = e.target.value.replace(/\D/g, '');
+                                                    setOtpCode(newOtp);
+                                                    if (e.target.value && idx < 5) document.getElementById(`otp-${idx + 1}`)?.focus();
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Backspace' && !digit && idx > 0) document.getElementById(`otp-${idx - 1}`)?.focus();
+                                                }}
+                                                style={{
+                                                    width: 45, height: 50, textAlign: 'center', fontSize: '1.25rem', fontWeight: 700,
+                                                    borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-primary)',
+                                                    color: 'var(--text-primary)', outline: 'none', transition: 'border-color 0.2s'
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 12 }}>
+                                        <button type="button" onClick={() => setShowOTP(false)} style={{ flex: 1, padding: '12px', borderRadius: 12, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer' }}>Batal</button>
+                                        <button type="submit" className="btn-primary" disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', fontWeight: 600, color: '#fff', opacity: loading ? 0.6 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>Verifikasi</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     )}
 
                     {/* Password Form */}
@@ -216,7 +310,8 @@ export default function AdminProfilePage() {
                                 <div style={{ position: 'relative' }}>
                                     <input type={showNew ? 'text' : 'password'} value={passwordForm.newPassword}
                                         onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                                        required minLength={6} style={{ ...inputStyle, paddingRight: 44 }} />
+                                        placeholder="Min. 8 karakter, huruf & angka"
+                                        required minLength={8} style={{ ...inputStyle, paddingRight: 44 }} />
                                     <button type="button" onClick={() => setShowNew(!showNew)} style={{
                                         position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                                         background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer',
@@ -227,7 +322,8 @@ export default function AdminProfilePage() {
                                 <label style={labelStyle}>Konfirmasi Password Baru</label>
                                 <input type="password" value={passwordForm.confirmPassword}
                                     onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                                    required minLength={6} style={inputStyle} />
+                                    placeholder="Ulangi password baru"
+                                    required minLength={8} style={inputStyle} />
                             </div>
                             <button type="submit" className="btn-primary" disabled={loading} style={{
                                 width: '100%', padding: '0.9rem', borderRadius: 14, border: 'none',

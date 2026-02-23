@@ -8,6 +8,7 @@ interface User {
     name: string;
     email: string;
     role: 'admin' | 'pengguna';
+    phone_number?: string | null;
     avatar?: string | null;
 }
 
@@ -18,7 +19,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isAdmin: boolean;
     login: (email: string, password: string) => Promise<User>;
-    register: (name: string, email: string, password: string) => Promise<void>;
+    register: (name: string, email: string, password: string, phone_number: string) => Promise<void>;
     logout: () => void;
     updateUser: (user: Partial<User>) => void;
 }
@@ -58,8 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return newUser;
     }, []);
 
-    const register = useCallback(async (name: string, email: string, password: string) => {
-        const response = await authAPI.register(name, email, password);
+    const register = useCallback(async (name: string, email: string, password: string, phone_number: string) => {
+        const response = await authAPI.register(name, email, password, phone_number);
         const { token: newToken, user: newUser } = response.data.data;
 
         setToken(newToken);

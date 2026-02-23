@@ -17,6 +17,8 @@ export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
+    const mobileMenuRef = useRef<HTMLDivElement>(null);
+    const mobileToggleRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         let lastScrollY = window.scrollY;
@@ -44,11 +46,15 @@ export default function Navbar() {
         setProfileOpen(false);
     }, [pathname]);
 
-    // Close profile dropdown when clicking outside
+    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
                 setProfileOpen(false);
+            }
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node) &&
+                mobileToggleRef.current && !mobileToggleRef.current.contains(e.target as Node)) {
+                setMobileOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -61,18 +67,15 @@ export default function Navbar() {
         { value: 'system' as const, icon: Monitor },
     ];
 
-    // Different left links for admin vs public
-    const isAdminRoute = pathname.startsWith('/admin') || pathname === '/dashboard' || (isAdmin && pathname === '/chat');
+    const isAdminRoute = pathname.startsWith('/admin');
+
     const leftLinks = isAuthenticated && isAdmin && isAdminRoute
         ? [
             { href: '/admin/dashboard', label: 'Panel Admin' },
         ]
-        : isAuthenticated
+        : isAuthenticated && !isAdmin
             ? [
-                { href: '/', label: 'Home' },
-                { href: '/books', label: 'Buku' },
-                { href: '/tentang', label: 'Tentang' },
-                { href: '/chat', label: 'Chat' },
+                { href: '/pengguna', label: 'Dashboard' },
             ]
             : [
                 { href: '/', label: 'Home' },
@@ -97,7 +100,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Center Logo */}
-                <Link href={isAuthenticated ? (isAdmin ? '/admin/dashboard' : '/dashboard') : '/'} className="navbar-center">
+                <Link href={isAuthenticated ? (isAdmin ? '/admin/dashboard' : '/pengguna') : '/'} className="navbar-center">
                     <Image src="/logo-awal-jdihn-small.png" alt="JDIH" width={36} height={36} />
                     <span className="brand-text" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.2 }}>
                         <span>Perpustakaan JDIH</span>
@@ -207,13 +210,13 @@ export default function Navbar() {
                 </div>
 
                 {/* Mobile Toggle */}
-                <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
+                <button ref={mobileToggleRef} className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
                     {mobileOpen ? <X size={24} /> : <Menu size={24} />}
                 </button>
             </nav>
 
             {/* Mobile Menu */}
-            <div className={`mobile-menu ${mobileOpen ? 'open' : ''}`}>
+            <div ref={mobileMenuRef} className={`mobile-menu ${mobileOpen ? 'open' : ''}`}>
                 {leftLinks.map((link) => (
                     <Link key={link.href} href={link.href}>
                         {link.label}

@@ -47,6 +47,22 @@ function BooksContent() {
     const [loading, setLoading] = useState(true);
     const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
 
+    // Debounce for real-time search
+    useEffect(() => {
+        const delaySearch = setTimeout(() => {
+            const currentSearch = searchParams.get('search') || '';
+            if (searchInput !== currentSearch) {
+                const params = new URLSearchParams(searchParams.toString());
+                if (searchInput) params.set('search', searchInput);
+                else params.delete('search');
+                params.delete('page'); // Reset pagination
+                router.push(`/books?${params.toString()}`);
+            }
+        }, 500);
+
+        return () => clearTimeout(delaySearch);
+    }, [searchInput, searchParams, router]);
+
     const page = parseInt(searchParams.get('page') || '1');
     const search = searchParams.get('search') || '';
     const fieldType = searchParams.get('field_type') || '';
@@ -82,7 +98,9 @@ function BooksContent() {
             if (value) params.set(key, value);
             else params.delete(key);
         });
-        if (updates.search !== undefined || updates.field_type !== undefined) params.delete('page');
+        if (updates.search !== undefined || updates.field_type !== undefined || updates.sort !== undefined) {
+            params.delete('page');
+        }
         router.push(`/books?${params.toString()}`);
     };
 

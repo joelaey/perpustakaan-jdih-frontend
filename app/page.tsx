@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen, Search, Download, Bookmark } from 'lucide-react';
 import { booksAPI } from '@/lib/api';
 import { Book, BookCard } from '@/components/BookCard';
 
@@ -16,7 +16,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push(isAdmin ? '/admin/dashboard' : '/dashboard');
+      router.push(isAdmin ? '/admin/dashboard' : '/pengguna');
     }
   }, [isAuthenticated, isAdmin, isLoading, router]);
 
@@ -56,11 +56,11 @@ export default function HomePage() {
           </div>
           <h1>
             Perpustakaan Digital<br />
-            <span className="accent">JDIH Kab. Sumedang</span>
+            <span className="accent">Buku Hukum JDIH</span>
           </h1>
           <p>
-            Akses koleksi dokumen hukum dari Perpustakaan JDIH Kabupaten Sumedang.
-            Jelajahi Perda, Perbup, SK, dan produk hukum lainnya secara digital.
+            Akses koleksi buku hukum terlengkap dari Perpustakaan JDIH Kabupaten Sumedang.
+            Jelajahi berbagai literatur, referensi, dan modul pembelajaran hukum yang tersedia secara digital.
           </p>
           <div className="hero-actions">
             <Link href="/books" className="btn btn-primary btn-lg">
@@ -107,38 +107,46 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* News Section (LOA-style 3-column) */}
+      {/* Features Section */}
       <section style={{ padding: '0 0 80px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <span className="section-label">Layanan Perpustakaan</span>
+        </div>
         <div className="news-grid">
           <div className="news-card animate-in">
-            <div className="card-bar" />
-            <div className="card-image" style={{ background: 'linear-gradient(135deg, var(--accent-bg) 0%, var(--surface) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BookOpen size={48} style={{ color: 'var(--accent)', opacity: 0.6 }} />
+            <div className="card-bar" style={{ background: 'var(--success)' }} />
+            <div className="card-image" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=800" alt="Search Books" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+              <Search size={48} style={{ color: 'white', position: 'relative', zIndex: 1, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
             </div>
-            <div className="card-label">Koleksi</div>
-            <div className="card-title">Koleksi terbaru buku hukum dari perpustakaan JDIH Sumedang</div>
-            <div className="card-date">Februari 2026</div>
+            <div className="card-label">Eksplorasi</div>
+            <div className="card-title">Pencarian Buku Real-time & Cerdas berbasis AI</div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0 24px 24px', margin: '-12px 0 0 0', lineHeight: 1.5 }}>Temukan buku hukum incaran Anda dalam hitungan detik. Fitur pencarian otomatis menampilkan hasil seketika lengkap dengan rekomendasi cerdas dari AI.</p>
           </div>
 
           <div className="news-card animate-in-delay-1">
-            <div className="card-bar" />
-            <div className="card-image wide" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #3d3d3d 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: 'white', fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 700, textAlign: 'center', padding: 24 }}>
-                Peraturan Daerah &amp; Hukum Kabupaten Sumedang
-              </span>
+            <div className="card-bar" style={{ background: 'var(--accent)' }} />
+            <div className="card-image" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=800" alt="Digital Access" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
+              <Download size={56} style={{ color: 'white', position: 'relative', zIndex: 1, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
             </div>
-            <div className="card-label">Informasi</div>
-            <div className="card-title">Akses dokumen hukum resmi Kabupaten Sumedang secara digital</div>
+            <div className="card-label">Akses Digital</div>
+            <div className="card-title">Baca Langsung & Unduh PDF Buku Hukum Gratis</div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0 24px 24px', margin: '-12px 0 0 0', lineHeight: 1.5 }}>Tidak perlu repot datang ke perpustakaan. Akses, baca langsung di layar Anda, atau unduh versi PDF dari ratusan koleksi buku digital kapan saja.</p>
           </div>
 
           <div className="news-card animate-in-delay-2">
-            <div className="card-bar" />
-            <div className="card-image" style={{ background: 'linear-gradient(135deg, var(--surface) 0%, var(--accent-bg) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 700, color: 'var(--accent)' }}>AI</span>
+            <div className="card-bar" style={{ background: 'var(--warning)' }} />
+            <div className="card-image" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=800" alt="Physical Borrowing" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+              <Bookmark size={48} style={{ color: 'white', position: 'relative', zIndex: 1, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
             </div>
-            <div className="card-label">Fitur Baru</div>
-            <div className="card-title">Rekomendasi buku cerdas berdasarkan minat Anda</div>
-            <div className="card-date">Februari 2026</div>
+            <div className="card-label">Peminjaman</div>
+            <div className="card-title">Reservasi & Pinjam Fisik Buku Hukum ke Lokasi</div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0 24px 24px', margin: '-12px 0 0 0', lineHeight: 1.5 }}>Buku fisiknya tersedia di rak kami? Ajukan peminjaman langsung melalui platform secara online dan ambil bukunya di Bagian Hukum JDIH Sumedang.</p>
           </div>
         </div>
       </section>

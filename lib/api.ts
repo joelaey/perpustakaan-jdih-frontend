@@ -42,9 +42,9 @@ api.interceptors.response.use(
 export const authAPI = {
     login: (email: string, password: string) =>
         api.post('/auth/login', { email, password }),
-    register: (name: string, email: string, password: string) =>
-        api.post('/auth/register', { name, email, password }),
-    getProfile: () => api.get('/auth/profile'),
+    register: (name: string, email: string, password: string, phone_number: string) =>
+        api.post('/auth/register', { name, email, password, phone_number }),
+    getProfile: () => api.get('/auth/me'),
 };
 
 // Books API
@@ -65,6 +65,7 @@ export const booksAPI = {
         if (params?.search) searchParams.set('search', params.search);
         if (params?.field_type) searchParams.set('field_type', params.field_type);
         if (params?.year) searchParams.set('year', params.year);
+        if (params?.sort) searchParams.set('sort', params.sort);
         const qs = searchParams.toString();
         return api.get(`/books${qs ? `?${qs}` : ''}`);
     },
@@ -84,7 +85,7 @@ export const usersAPI = {
         api.post('/users', data),
     update: (id: number, data: Record<string, unknown>) => api.put(`/users/${id}`, data),
     delete: (id: number) => api.delete(`/users/${id}`),
-    updateProfile: (data: { name?: string; email?: string; avatar?: string }) =>
+    updateProfile: (data: { name?: string; email?: string; phone_number?: string; avatar?: string }) =>
         api.put('/users/profile', data),
     changePassword: (currentPassword: string, newPassword: string) =>
         api.put('/users/change-password', { currentPassword, newPassword }),
@@ -102,8 +103,9 @@ export const borrowingsAPI = {
         const qs = searchParams.toString();
         return api.get(`/borrowings${qs ? `?${qs}` : ''}`);
     },
-    updateStatus: (id: number, status: string, adminNotes?: string) =>
-        api.put(`/borrowings/${id}/status`, { status, admin_notes: adminNotes }),
+    getById: (id: number) => api.get(`/borrowings/${id}`),
+    updateStatus: (id: number, status: string, adminNotes?: string, dueDate?: string) =>
+        api.put(`/borrowings/${id}/status`, { status, admin_notes: adminNotes, due_date: dueDate }),
     cancel: (id: number) => api.delete(`/borrowings/${id}`),
     getStats: () => api.get('/borrowings/stats'),
 };

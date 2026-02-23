@@ -124,6 +124,35 @@ export default function BookDetailPage() {
             ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.file_url.startsWith('/') ? '' : '/'}${book.file_url}`
             : '';
 
+    const getCoverStyle = (book: Book) => {
+        const seedText = book.field_type || book.title || "Umum";
+        let hash = 0;
+        for (let i = 0; i < seedText.length; i++) {
+            hash = seedText.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const colorIndex = Math.abs(hash) % 7;
+
+        const gradients = [
+            'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', // Blue
+            'linear-gradient(135deg, #831843 0%, #be185d 100%)', // Pink/Red
+            'linear-gradient(135deg, #14532d 0%, #16a34a 100%)', // Green
+            'linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%)', // Purple
+            'linear-gradient(135deg, #9a3412 0%, #f97316 100%)', // Orange
+            'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)', // Teal
+            'linear-gradient(135deg, #374151 0%, #6b7280 100%)', // Gray
+        ];
+
+        return {
+            background: gradients[colorIndex],
+            display: 'flex',
+            flexDirection: 'column' as const,
+            justifyContent: 'space-between',
+            padding: '24px',
+            color: 'white',
+            boxSizing: 'border-box' as const,
+        };
+    };
+
     return (
         <div style={{ minHeight: '100vh' }}>
             <Navbar />
@@ -140,8 +169,29 @@ export default function BookDetailPage() {
                         {mainCoverUrl && !mainImgError ? (
                             <img src={mainCoverUrl} alt={book.title} onError={() => setMainImgError(true)} />
                         ) : (
-                            <div className="no-cover" style={{ width: '100%', height: '100%', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <BookOpen size={64} style={{ color: 'var(--text-muted)' }} />
+                            <div className="virtual-cover" style={getCoverStyle(book)}>
+                                <div style={{
+                                    fontSize: '1.5rem',
+                                    fontFamily: 'var(--font-serif)',
+                                    fontWeight: 700,
+                                    lineHeight: 1.3,
+                                    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                }}>
+                                    {book.title}
+                                </div>
+
+                                <div>
+                                    <div style={{ width: '100%', height: 2, backgroundColor: 'rgba(255,255,255,0.3)', margin: '16px 0' }} />
+                                    <div style={{
+                                        fontSize: '0.85rem',
+                                        color: 'rgba(255,255,255,0.85)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em',
+                                        fontWeight: 600,
+                                    }}>
+                                        {book.author || 'JDIH Sumedang'}
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>

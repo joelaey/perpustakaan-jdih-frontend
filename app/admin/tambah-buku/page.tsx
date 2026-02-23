@@ -155,14 +155,15 @@ function BookForm({ initialData, mode, bookId }: BookFormProps) {
     return (
         <main style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1.5rem', paddingTop: '6rem' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
                 <button
                     onClick={() => router.push('/admin/books')}
                     style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
                         padding: '0.5rem 1rem', border: 'none', cursor: 'pointer',
                         borderRadius: 12, background: 'rgba(255,255,255,0.05)',
                         color: 'var(--text-secondary)', fontSize: '0.9rem',
+                        marginBottom: 12
                     }}
                 >
                     <ArrowLeft size={18} /> Kembali
@@ -392,10 +393,10 @@ function BookForm({ initialData, mode, bookId }: BookFormProps) {
                     <button
                         type="submit"
                         disabled={loading || !form.title}
+                        className="btn-primary"
                         style={{
                             width: '100%', padding: '1rem', borderRadius: 14, border: 'none',
-                            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                            color: '#fff', fontSize: '1rem', fontWeight: 600,
+                            fontSize: '1rem', fontWeight: 600,
                             cursor: loading ? 'not-allowed' : 'pointer',
                             opacity: loading || !form.title ? 0.6 : 1,
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

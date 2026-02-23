@@ -6,6 +6,8 @@ import Navbar from '@/components/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { messagesAPI } from '@/lib/api';
 import { MessageCircle, Send, ArrowLeft, Shield, User as UserIcon } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Conversation {
     partner_id: number;
@@ -132,14 +134,14 @@ export default function ChatPage() {
     const showSidebar = isAdmin; // users go directly to chat
 
     return (
-        <AuthGuard>
-            <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+        <AuthGuard requireAdmin>
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40, background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <Navbar />
-                <main style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1rem', paddingTop: '5rem', height: 'calc(100vh - 5rem)' }}>
-                    <div className={`chat-container ${showSidebar && activePartner ? 'with-partner' : showSidebar ? 'sidebar-only' : 'main-only'}`}>
+                <main style={{ flex: 1, width: '100%', maxWidth: 1000, margin: '0 auto', padding: '0 1rem', paddingTop: '5.5rem', paddingBottom: '1rem', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <div className={`chat-container ${showSidebar && activePartner ? 'with-partner' : showSidebar ? 'sidebar-only' : 'main-only'}`} style={{ borderRadius: 16, flex: 1, minHeight: 0, width: '100%' }}>
                         {/* Left: Conversations List (admin only shows sidebar) */}
                         {showSidebar && (
-                            <div className="chat-sidebar">
+                            <div className="chat-sidebar" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, borderRight: '1px solid var(--glass-border)' }}>
                                 <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
                                     <MessageCircle size={22} style={{ color: 'var(--accent)' }} />
                                     <div>
@@ -155,49 +157,51 @@ export default function ChatPage() {
                                         Belum ada pesan dari pengguna
                                     </div>
                                 ) : (
-                                    conversations.map(conv => (
-                                        <button key={conv.partner_id} onClick={() => openChat(conv)} style={{
-                                            display: 'flex', alignItems: 'center', gap: 12, width: '100%',
-                                            padding: '0.9rem 1.25rem', border: 'none', cursor: 'pointer',
-                                            background: activePartner?.partner_id === conv.partner_id ? 'rgba(220,38,38,0.08)' : 'transparent',
-                                            borderBottom: '1px solid var(--glass-border)', textAlign: 'left',
-                                            transition: 'background 0.15s',
-                                        }}>
-                                            <div style={{
-                                                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                                                background: 'rgba(220,38,38,0.15)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: 'var(--accent)',
+                                    <div style={{ flex: 1, overflowY: 'auto' }}>
+                                        {conversations.map(conv => (
+                                            <button key={conv.partner_id} onClick={() => openChat(conv)} style={{
+                                                display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                                                padding: '0.9rem 1.25rem', border: 'none', cursor: 'pointer',
+                                                background: activePartner?.partner_id === conv.partner_id ? 'rgba(220,38,38,0.08)' : 'transparent',
+                                                borderBottom: '1px solid var(--glass-border)', textAlign: 'left',
+                                                transition: 'background 0.15s',
                                             }}>
-                                                <UserIcon size={18} />
-                                            </div>
-                                            <div style={{ flex: 1, overflow: 'hidden' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{conv.partner_name}</span>
-                                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatTime(conv.last_message_time)}</span>
+                                                <div style={{
+                                                    width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                                                    background: 'rgba(220,38,38,0.15)',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    color: 'var(--accent)',
+                                                }}>
+                                                    <UserIcon size={18} />
                                                 </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
-                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>
-                                                        {conv.last_message}
-                                                    </span>
-                                                    {conv.unread_count > 0 && (
-                                                        <span style={{
-                                                            minWidth: 20, height: 20, borderRadius: 10, fontSize: '0.7rem',
-                                                            background: 'var(--accent)', color: '#fff', display: 'flex',
-                                                            alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 4px',
-                                                        }}>{conv.unread_count}</span>
-                                                    )}
+                                                <div style={{ flex: 1, overflow: 'hidden' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{conv.partner_name}</span>
+                                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatTime(conv.last_message_time)}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+                                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>
+                                                            {conv.last_message}
+                                                        </span>
+                                                        {conv.unread_count > 0 && (
+                                                            <span style={{
+                                                                minWidth: 20, height: 20, borderRadius: 10, fontSize: '0.7rem',
+                                                                background: 'var(--accent)', color: '#fff', display: 'flex',
+                                                                alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 4px',
+                                                            }}>{conv.unread_count}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </button>
-                                    ))
+                                            </button>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
                         )}
 
                         {/* Right: Messages Area */}
                         {activePartner ? (
-                            <div className="chat-main" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            <div className="chat-main" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                                 {/* Chat Header */}
                                 <div style={{
                                     padding: '1rem 1.25rem', borderBottom: '1px solid var(--glass-border)',
@@ -260,7 +264,14 @@ export default function ChatPage() {
                                                                 {msg.sender_name}
                                                             </div>
                                                         )}
-                                                        <div style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>{msg.message}</div>
+                                                        <div style={{ fontSize: '0.9rem', lineHeight: 1.5, wordBreak: 'break-word' }}>
+                                                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                                                                p: ({ ...props }) => <p style={{ margin: 0 }} {...props} />,
+                                                                a: ({ ...props }) => <a style={{ color: mine ? '#fff' : 'var(--primary)', textDecoration: 'underline' }} {...props} />
+                                                            }}>
+                                                                {msg.message}
+                                                            </ReactMarkdown>
+                                                        </div>
                                                         <div style={{
                                                             fontSize: '0.65rem', marginTop: 4, textAlign: 'right',
                                                             opacity: 0.7, color: mine ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)',
@@ -278,16 +289,24 @@ export default function ChatPage() {
                                 {/* Input */}
                                 <form onSubmit={handleSend} style={{
                                     padding: '0.75rem 1.25rem', borderTop: '1px solid var(--glass-border)',
-                                    display: 'flex', gap: 8,
+                                    display: 'flex', gap: 8, alignItems: 'flex-end', flexShrink: 0,
                                 }}>
-                                    <input
+                                    <textarea
                                         value={newMsg} onChange={e => setNewMsg(e.target.value)}
-                                        placeholder={isAdmin ? 'Balas pesan pengguna...' : 'Ketik pesan ke admin...'}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSend(e);
+                                            }
+                                        }}
+                                        placeholder={isAdmin ? 'Balas pesan...' : 'Kirim pesan...'}
                                         style={{
                                             flex: 1, padding: '0.7rem 1rem', borderRadius: 12,
                                             background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)',
                                             color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none',
+                                            resize: 'none', minHeight: 44, maxHeight: 120, lineHeight: 1.4,
                                         }}
+                                        rows={1}
                                     />
                                     <button type="submit" className="btn-primary" disabled={sending || !newMsg.trim()} style={{
                                         width: 44, height: 44, borderRadius: 12, border: 'none',

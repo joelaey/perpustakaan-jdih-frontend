@@ -29,7 +29,7 @@ export default function AuthGuard({
         }
 
         if (requireAdmin && !isAdmin) {
-            router.push('/dashboard');
+            router.push('/pengguna');
             return;
         }
     }, [isAuthenticated, isAdmin, isLoading, requireAuth, requireAdmin, redirectTo, router]);

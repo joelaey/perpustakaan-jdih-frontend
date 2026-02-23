@@ -11,6 +11,7 @@ interface UserData {
     id: number;
     name: string;
     email: string;
+    phone_number?: string;
     role: string;
     created_at: string;
 }
@@ -23,7 +24,7 @@ export default function AdminUsersPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const [form, setForm] = useState({ name: '', email: '', password: '', role: 'pengguna' });
+    const [form, setForm] = useState({ name: '', email: '', phone_number: '', password: '', role: 'pengguna' });
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -40,13 +41,13 @@ export default function AdminUsersPage() {
 
     const openAddModal = () => {
         setEditingUser(null);
-        setForm({ name: '', email: '', password: '', role: 'pengguna' });
+        setForm({ name: '', email: '', phone_number: '', password: '', role: 'pengguna' });
         setModalOpen(true);
     };
 
     const openEditModal = (user: UserData) => {
         setEditingUser(user);
-        setForm({ name: user.name, email: user.email, password: '', role: user.role });
+        setForm({ name: user.name, email: user.email, phone_number: user.phone_number || '', password: '', role: user.role });
         setModalOpen(true);
     };
 
@@ -54,11 +55,11 @@ export default function AdminUsersPage() {
         e.preventDefault();
         try {
             if (editingUser) {
-                const updateData: Record<string, unknown> = { name: form.name, email: form.email, role: form.role };
+                const updateData: Record<string, unknown> = { name: form.name, email: form.email, phone_number: form.phone_number || null, role: form.role };
                 if (form.password) updateData.password = form.password;
                 await usersAPI.update(editingUser.id, updateData);
                 if (user?.id === editingUser.id) {
-                    updateUser({ name: form.name, email: form.email, role: form.role as 'admin' | 'pengguna' });
+                    updateUser({ name: form.name, email: form.email, role: form.role as 'admin' | 'pengguna', phone_number: form.phone_number || null });
                 }
                 setMessage({ type: 'success', text: 'Pengguna berhasil diperbarui' });
             } else {
@@ -166,7 +167,7 @@ export default function AdminUsersPage() {
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead>
                                         <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                                            {['Nama', 'Email', 'Role', 'Terdaftar', 'Aksi'].map(h => (
+                                            {['Nama', 'Kontak', 'Role', 'Terdaftar', 'Aksi'].map(h => (
                                                 <th key={h} style={{
                                                     padding: '14px 16px', textAlign: 'left', fontSize: '0.8rem',
                                                     fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase',
@@ -194,7 +195,10 @@ export default function AdminUsersPage() {
                                                         <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{user.name}</span>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{user.email}</td>
+                                                <td style={{ padding: '14px 16px' }}>
+                                                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: 2 }}>{user.email}</div>
+                                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{user.phone_number ? `+62${user.phone_number}` : '-'}</div>
+                                                </td>
                                                 <td style={{ padding: '14px 16px' }}>
                                                     <span style={{
                                                         padding: '4px 12px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 500,
@@ -251,6 +255,16 @@ export default function AdminUsersPage() {
                                 <div style={{ marginBottom: '1rem' }}>
                                     <label style={labelStyle}>Email *</label>
                                     <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required style={inputStyle} placeholder="email@contoh.com" />
+                                </div>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={labelStyle}>Nomor Telepon</label>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <span style={{
+                                            padding: '0.75rem 1rem', border: '1px solid var(--glass-border)',
+                                            background: 'rgba(255,255,255,0.02)', color: 'var(--text-secondary)', borderRadius: 12,
+                                        }}>+62</span>
+                                        <input type="tel" value={form.phone_number} onChange={e => setForm({ ...form, phone_number: e.target.value.replace(/\D/g, '') })} style={{ ...inputStyle, flex: 1 }} placeholder="81234567890" />
+                                    </div>
                                 </div>
                                 <div style={{ marginBottom: '1rem' }}>
                                     <label style={labelStyle}>{editingUser ? 'Password Baru (kosongkan jika tidak diubah)' : 'Password *'}</label>
