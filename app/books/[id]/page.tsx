@@ -115,13 +115,13 @@ export default function BookDetailPage() {
     const coverUrl = book?.cover?.startsWith('http')
         ? book.cover
         : book?.cover
-            ? `https://perpustakaan-jdih-backend.up.railway.app${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
+            ? `https://perpustakaan-jdih-backend-production.up.railway.app${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
             : '';
 
     const fileUrl = book?.file_url?.startsWith('http')
         ? book.file_url
         : book?.file_url
-            ? `https://perpustakaan-jdih-backend.up.railway.app${book.file_url.startsWith('/') ? '' : '/'}${book.file_url}`
+            ? `https://perpustakaan-jdih-backend-production.up.railway.app${book.file_url.startsWith('/') ? '' : '/'}${book.file_url}`
             : null;
 
     const getCoverStyle = (book: Book) => {

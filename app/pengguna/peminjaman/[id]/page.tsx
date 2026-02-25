@@ -143,7 +143,7 @@ export default function PenggunaPeminjamanDetailPage() {
                                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                                             <div style={{ width: 40, height: 56, borderRadius: 6, background: 'rgba(255,255,255,0.05)', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
                                                 {selectedBorrowing.book_cover ? (
-                                                    <img src={selectedBorrowing.book_cover.startsWith('http') ? selectedBorrowing.book_cover : `https://perpustakaan-jdih-backend.up.railway.app${selectedBorrowing.book_cover.startsWith('/') ? '' : '/'}${selectedBorrowing.book_cover}`} alt={selectedBorrowing.book_title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <img src={selectedBorrowing.book_cover.startsWith('http') ? selectedBorrowing.book_cover : `https://perpustakaan-jdih-backend-production.up.railway.app${selectedBorrowing.book_cover.startsWith('/') ? '' : '/'}${selectedBorrowing.book_cover}`} alt={selectedBorrowing.book_title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 ) : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><BookOpen size={16} color="var(--text-muted)" /></div>}
                                             </div>
                                             <div>
