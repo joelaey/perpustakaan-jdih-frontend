@@ -122,7 +122,7 @@ export default function HomePage() {
             </div>
             <div className="card-label">Eksplorasi</div>
             <div className="card-title">Pencarian Buku Real-time & Cerdas berbasis AI</div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0 24px 24px', margin: '-12px 0 0 0', lineHeight: 1.5 }}>Temukan buku hukum incaran Anda dalam hitungan detik. Fitur pencarian otomatis menampilkan hasil seketika lengkap dengan rekomendasi cerdas dari AI.</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', paddingBottom: '24px', marginTop: '4px', lineHeight: 1.5 }}>Temukan buku hukum incaran Anda dalam hitungan detik. Fitur pencarian otomatis menampilkan hasil seketika lengkap dengan rekomendasi cerdas dari AI.</p>
           </div>
 
           <div className="news-card animate-in-delay-1">
@@ -134,7 +134,7 @@ export default function HomePage() {
             </div>
             <div className="card-label">Akses Digital</div>
             <div className="card-title">Baca Langsung & Unduh PDF Buku Hukum Gratis</div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0 24px 24px', margin: '-12px 0 0 0', lineHeight: 1.5 }}>Tidak perlu repot datang ke perpustakaan. Akses, baca langsung di layar Anda, atau unduh versi PDF dari ratusan koleksi buku digital kapan saja.</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', paddingBottom: '24px', marginTop: '4px', lineHeight: 1.5 }}>Tidak perlu repot datang ke perpustakaan. Akses, baca langsung di layar Anda, atau unduh versi PDF dari ratusan koleksi buku digital kapan saja.</p>
           </div>
 
           <div className="news-card animate-in-delay-2">
@@ -146,7 +146,7 @@ export default function HomePage() {
             </div>
             <div className="card-label">Peminjaman</div>
             <div className="card-title">Reservasi & Pinjam Fisik Buku Hukum ke Lokasi</div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', padding: '0 24px 24px', margin: '-12px 0 0 0', lineHeight: 1.5 }}>Buku fisiknya tersedia di rak kami? Ajukan peminjaman langsung melalui platform secara online dan ambil bukunya di Bagian Hukum JDIH Sumedang.</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', paddingBottom: '24px', marginTop: '4px', lineHeight: 1.5 }}>Buku fisiknya tersedia di rak kami? Ajukan peminjaman langsung melalui platform secara online dan ambil bukunya di Bagian Hukum JDIH Sumedang.</p>
           </div>
         </div>
       </section>
