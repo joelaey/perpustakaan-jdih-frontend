@@ -51,7 +51,7 @@ export default function HomePage() {
       <section className="hero animate-in">
         <div className="hero-content">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: 24 }}>
-            <Image src="/logo-app.png" alt="JDIH" width={64} height={64} />
+            <Image src="/logo-awal-jdihn-small.png" alt="JDIH" width={64} height={64} />
             <Image src="/lambang-sumedang.png" alt="Kabupaten Sumedang" width={64} height={64} />
           </div>
           <h1>

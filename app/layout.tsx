@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   description: "Perpustakaan Digital Jaringan Dokumentasi dan Informasi Hukum Kabupaten Sumedang",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo-app.png",
-    apple: "/logo-app.png",
+    icon: "/logo-awal-jdihn-small.png",
+    apple: "/logo-awal-jdihn-small.png",
   },
 };
 
