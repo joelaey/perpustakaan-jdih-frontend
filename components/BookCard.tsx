@@ -25,7 +25,7 @@ export function BookCard({ book, delay = 0 }: { book: Book, delay?: number }) {
     const coverUrl = book.cover?.startsWith('http')
         ? book.cover
         : book.cover
-            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
+            ? `https://perpustakaan-jdih-backend.up.railway.app${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
             : '';
 
     // Dynamic cover generator based on category/field type

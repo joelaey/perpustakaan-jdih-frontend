@@ -112,17 +112,17 @@ export default function BookDetailPage() {
         }
     };
 
-    const mainCoverUrl = book.cover?.startsWith('http')
+    const coverUrl = book?.cover?.startsWith('http')
         ? book.cover
-        : book.cover
-            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
+        : book?.cover
+            ? `https://perpustakaan-jdih-backend.up.railway.app${book.cover.startsWith('/') ? '' : '/'}${book.cover}`
             : '';
 
-    const pdfUrl = book.file_url?.startsWith('http')
+    const fileUrl = book?.file_url?.startsWith('http')
         ? book.file_url
-        : book.file_url
-            ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${book.file_url.startsWith('/') ? '' : '/'}${book.file_url}`
-            : '';
+        : book?.file_url
+            ? `https://perpustakaan-jdih-backend.up.railway.app${book.file_url.startsWith('/') ? '' : '/'}${book.file_url}`
+            : null;
 
     const getCoverStyle = (book: Book) => {
         const seedText = book.field_type || book.title || "Umum";
@@ -166,8 +166,8 @@ export default function BookDetailPage() {
                 {/* Book Detail */}
                 <div className="book-detail animate-in">
                     <div className="book-detail-cover">
-                        {mainCoverUrl && !mainImgError ? (
-                            <img src={mainCoverUrl} alt={book.title} onError={() => setMainImgError(true)} />
+                        {coverUrl && !mainImgError ? (
+                            <img src={coverUrl} alt={book.title} onError={() => setMainImgError(true)} />
                         ) : (
                             <div className="virtual-cover" style={getCoverStyle(book)}>
                                 <div style={{
@@ -226,9 +226,9 @@ export default function BookDetailPage() {
                                 <Bookmark size={18} /> Pinjam Buku
                             </button>
 
-                            {pdfUrl ? (
+                            {fileUrl ? (
                                 <button
-                                    onClick={() => handleAction(pdfUrl)}
+                                    onClick={() => handleAction(fileUrl)}
                                     className="btn btn-outline btn-lg"
                                     style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                                 >
